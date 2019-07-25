@@ -1,4 +1,5 @@
 import
+  ../stdext,
   std/strformat,
   std/strutils,
   std/sets,
@@ -6,7 +7,7 @@ import
   std/macrocache
 
 export
-  sysmacros except `$`, emit
+  sysmacros except `$`, emit, copyNimTree
 
 export
   macrocache
@@ -22,7 +23,7 @@ proc `$`*(n: Node): string =
   result = "NimNode:\n" & (lit & "\n" & tree).indent(2)
 
 proc tree*(kind: NodeKind; sons: varargs[Node]): Node =
-  result = newTree(kind)
+  result = newNimNode(kind)
   for son in sons:
     result.add(son)
 
@@ -63,11 +64,17 @@ proc typ*(n: Node): Node =
 proc str*(n: Node): string =
   result = strVal(n)
 
-proc `id==`*(n: NimNode; name: string): bool =
-  result = n.eqIdent(name)
+proc `id==`*(a: NimNode; b: string): bool =
+  result = eqIdent(a, b)
 
-proc `id!=`*(n: NimNode; name: string): bool =
-  result = not `id==`(n, name)
+proc `id!=`*(a: NimNode; b: string): bool =
+  result = not eqIdent(a, b)
+
+proc `id==`*(a: NimNode; b: NimNode): bool =
+  result = eqIdent(a, b)
+
+proc `id!=`*(a: NimNode; b: NimNode): bool =
+  result = not eqIdent(a, b)
 
 proc needsLen*(n: Node; len: int) =
   if n.len != len:
@@ -87,3 +94,15 @@ proc needsId*(n: Node; idents: varargs[string]) =
     if `id==`(n, ident):
       return
   error(&"bad node ident. needs<{idents}> got<{n.strVal}>\n{n}")
+
+proc copyTree*(n: Node): Node =
+  result = copyNimTree(n)
+
+proc genBlkStmts*(stmts: varargs[NimNode]): NimNode =
+  result = nnkBlockStmt.tree(empty, nnkStmtList.tree(stmts))
+
+proc low*(n: Node): int =
+  result = 0
+
+proc high*(n: Node): int =
+  result = n.len - 1

@@ -3,6 +3,9 @@ import
   ./macros,
   ./anon
 
+type
+  CError* = object of CatchableError
+
 macro emit*(emits: varargs[untyped]): untyped =
   result =
     nnkPragma.tree(
