@@ -7,7 +7,7 @@ import
   std/macrocache
 
 export
-  sysmacros except `$`, emit, copyNimTree
+  sysmacros except `$`, emit, copyNimTree, expectKind, expectLen, expectMinLen
 
 export
   macrocache
@@ -33,6 +33,10 @@ proc node*(kind: NodeKind): Node =
 proc id*(name: string; public = false;
          pragmas: openarray[Node] = []): Node =
   result = ident(name)
+  if public:
+    result = postfix(result, "*")
+  if pragmas.len > 0:
+    result = nnkPragmaExpr.tree(result, nnkPragma.tree(pragmas))
 
 proc pubId*(name: string; pragmas: openarray[Node] = []): Node =
   result = id(name, true, pragmas)
@@ -40,10 +44,10 @@ proc pubId*(name: string; pragmas: openarray[Node] = []): Node =
 template empty*: Node =
   nnkEmpty.node()
 
-macro dump*(body: untyped): untyped =
+macro dumpAST*(body: untyped): untyped =
   echo body
 
-macro dumpTyped*(body: typed): untyped =
+macro dumpTypedAST*(body: typed): untyped =
   echo body
 
 proc genTypeDef*(name, def: Node): Node =
@@ -95,10 +99,10 @@ proc needsId*(n: Node; idents: varargs[string]) =
       return
   error(&"bad node ident. needs<{idents}> got<{n.strVal}>\n{n}")
 
-proc copyTree*(n: Node): Node =
-  result = copyNimTree(n)
+proc unexpNode*(n: Node) =
+  error(&"unexpected node:\n{n}")
 
-proc genBlkStmts*(stmts: varargs[NimNode]): NimNode =
+proc genBlkStmts*(stmts: varargs[Node]): Node =
   result = nnkBlockStmt.tree(empty, nnkStmtList.tree(stmts))
 
 proc low*(n: Node): int =
@@ -106,3 +110,30 @@ proc low*(n: Node): int =
 
 proc high*(n: Node): int =
   result = n.len - 1
+
+proc genDef*(name, typ, val: Node): Node =
+  result = nnkIdentDefs.tree(name, typ, val)
+
+proc genDefVal*(name, val: Node): Node =
+  result = nnkIdentDefs.tree(name, empty, val)
+
+proc genDefTyp*(name, typ: Node): Node =
+  result = nnkIdentDefs.tree(name, typ, empty)
+
+proc callStmtField*(n: Node): tuple[lhs, rhs: Node] =
+  n.needsKind(nnkCall)
+  n.needsLen(2)
+  n[0].needsKind(nnkIdent)
+  n[1].needsKind(nnkStmtList)
+  n[1].needsLen(1)
+  result.lhs = n[0]
+  result.rhs = n[1][0]
+
+proc makePub*(n: Node): Node =
+  result = n
+  case n.kind:
+  of nnkIdentDefs:
+    n[0] = makePub(n[0])
+  of nnkIdent:
+    result = postfix(n, "*")
+  else: unexpNode(n)

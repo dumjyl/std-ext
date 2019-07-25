@@ -13,6 +13,5 @@ macro argTyp*(fn: typed; i: static[int]): untyped =
 
 
 when isMainModule:
-  safeAdd.arg(0)
   assert(noptr(ptr int) is int)
   assert(noptr(ref seq[float]) is seq[float])

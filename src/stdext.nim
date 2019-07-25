@@ -1,8 +1,13 @@
+from sugar import dump
+
+export
+  dump
+
 proc `$`*(x: ref|ptr): string =
-  if x != nil:
-    result = "ref " & $x[]
-  else:
-    result = "ref nil"
+    if x != nil:
+      result = "ref " & $x[]
+    else:
+      result = "ref nil"
 
 type
   LowHigh* = concept x

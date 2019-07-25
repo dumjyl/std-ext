@@ -13,26 +13,38 @@ macro emit*(emits: varargs[untyped]): untyped =
         id"emit",
         nnkBracket.tree(emits)))
 
-proc semAccessSpec(n: NimNode; privacy: Enum(Private, Public)) =
-  echo privacy
+proc classAccessSpec(ns: Node; defs: var seq[Node]) =
+  ns.needsKind(nnkStmtList)
+  for n in ns:
+    case n.kind:
+    of nnkCall:
+      let f = callStmtField(n)
+      defs.add(genDefTyp(f.lhs, f.rhs))
+    of nnkProcDef: discard
+    else: unexpNode(n)
 
-macro class*(name: untyped; body: untyped): untyped =
+macro class*(name, body: untyped): untyped =
   when not defined(cpp):
     error("class macro only supported for c++ backend", name)
+  var privDefs, pubDefs: seq[Node]
   for spec in body:
     spec.needsKind(nnkCall)
     spec.needsLen(2)
     spec[0].needsId("public", "private")
     spec[1].needsKind(nnkStmtList)
-    if spec[0].eqIdent("public"):
-      semAccessSpec(spec[1], _.Private)
+    if `id==`(spec[0], "private"):
+      classAccessSpec(spec[1], privDefs)
     else:
-      semAccessSpec(spec[1], _.Public)
-      # echo Private
-      # semAccessSpec(spec[1], Private)
-
+      classAccessSpec(spec[1], pubDefs)
   let strName = strVal(name)
   result = quote do: emit("class ", `strName`, "{};")
+  var fields: seq[Node]
+  for def in pubDefs:
+    if def.kind == nnkIdentDefs:
+      fields.add(makePub(def))
+  for def in privDefs:
+    if def.kind == nnkIdentDefs:
+      fields.add(def)
   result =
     nnkTypeSection.tree(
       nnkTypeDef.tree(
@@ -41,15 +53,15 @@ macro class*(name: untyped; body: untyped): untyped =
         nnkObjectTy.tree(
           empty,
           empty,
-          empty)))
+          nnkRecList.tree(fields))))
 
 when isMainModule:
   class Foo:
     private:
-      var x: int
+      x: int
 
     public:
-      proc Foo(): Foo {.initializer: [].} =
+      proc Foo(this: ptr Foo): Foo =
         discard
 
   var x: Foo

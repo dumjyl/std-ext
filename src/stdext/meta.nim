@@ -14,21 +14,19 @@ template metaImplUnroll(TOuter, TInner, iter) =
                 body: untyped): untyped =
     result = nnkStmtList.tree()
     for x in iter:
-      let stmts = implUnroll[TInner](copyTree(body), xSym, x)
+      let stmts = implUnroll[TInner](copy(body), xSym, x)
       if withBlock:
         result.add(genBlkStmts(stmts))
       else:
         result.add(stmts)
 
 metaImplUnroll(int, int, span(xs))
-metaImplUnroll(seq[int], int, xs)
-metaImplUnroll(seq[string], string, xs)
+metaImplUnroll(openarray[int], int, xs)
+metaImplUnroll(openarray[string], string, xs)
 
 when isMainModule:
-  proc intStrs(n: int): seq[string] =
-    for i in 0 ..< n:
-      result.add($i & "%")
-
-  unroll y, intStrs(4), true:
-    var x = y
-    echo x
+  var sum = 0
+  unroll x, @[1, 2, 3], true:
+    var y = x * 2
+    sum += y
+  doAssert(sum == 12)
