@@ -30,6 +30,10 @@ proc tree*(kind: NodeKind; sons: varargs[Node]): Node =
 proc node*(kind: NodeKind): Node =
   result = newNimNode(kind)
 
+proc node*(kind: NodeKind; str: string): Node =
+  result = newNimNode(kind)
+  result.strVal = str
+
 proc id*(name: string; public = false;
          pragmas: openarray[Node] = []): Node =
   result = ident(name)
@@ -38,7 +42,7 @@ proc id*(name: string; public = false;
   if pragmas.len > 0:
     result = nnkPragmaExpr.tree(result, nnkPragma.tree(pragmas))
 
-proc pubId*(name: string; pragmas: openarray[Node] = []): Node =
+proc publicId*(name: string; pragmas: openarray[Node] = []): Node =
   result = id(name, true, pragmas)
 
 template empty*: Node =
@@ -120,6 +124,12 @@ proc genDefVal*(name, val: Node): Node =
 proc genDefTyp*(name, typ: Node): Node =
   result = nnkIdentDefs.tree(name, typ, empty)
 
+proc `gen@:@`*(a, b: Node): Node =
+  result = nnkExprColonExpr.tree(a, b)
+
+proc genLit*(str: string): Node =
+  result = nnkStrLit.node(str)
+
 proc callStmtField*(n: Node): tuple[lhs, rhs: Node] =
   n.needsKind(nnkCall)
   n.needsLen(2)
@@ -129,11 +139,12 @@ proc callStmtField*(n: Node): tuple[lhs, rhs: Node] =
   result.lhs = n[0]
   result.rhs = n[1][0]
 
-proc makePub*(n: Node): Node =
+proc makePublic*(n: Node): Node =
   result = n
   case n.kind:
   of nnkIdentDefs:
-    n[0] = makePub(n[0])
+    n[0] = makePublic(n[0])
   of nnkIdent:
     result = postfix(n, "*")
-  else: unexpNode(n)
+  else:
+    unexpNode(n)
