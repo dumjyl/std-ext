@@ -9,7 +9,7 @@ proc implUnroll[T](n: NimNode; xSym: NimNode; x: T): NimNode =
   for i in span(n):
     n[i] = n[i].implUnroll(xSym, x)
 
-template metaImplUnroll(TOuter, TInner, iter) =
+template templUnroll(TOuter, TInner, iter) =
   macro unroll*(xSym: untyped; xs: static TOuter, withBlock: static bool;
                 body: untyped): untyped =
     result = nnkStmtList.tree()
@@ -20,9 +20,9 @@ template metaImplUnroll(TOuter, TInner, iter) =
       else:
         result.add(stmts)
 
-metaImplUnroll(int, int, span(xs))
-metaImplUnroll(openarray[int], int, xs)
-metaImplUnroll(openarray[string], string, xs)
+templUnroll(int, int, span(xs))
+templUnroll(openarray[int], int, xs)
+templUnroll(openarray[string], string, xs)
 
 when isMainModule:
   var sum = 0
