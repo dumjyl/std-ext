@@ -4,7 +4,7 @@ import
 macro ADT(T: untyped): untyped =
   discard
 
-when isMainModule:
+main:
   type Test = ADT Foo(float, int, string) |
                                       int |
                                     float

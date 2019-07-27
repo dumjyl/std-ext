@@ -1,3 +1,6 @@
+import
+  ../stdext
+
 ## https://en.cppreference.com/w/cpp/header/random
 
 {.passC: "-std=c++11".}
@@ -137,11 +140,9 @@ proc max*(self: typedesc[RandomDevice]): cuint
 proc entropy*(self: RandomDevice): cdouble
   {.importcpp: "#.entropy()", header: H.}
 
-when isMainModule:
-  proc main =
-    var rd = RandomDevice.init()
-    echo rd.entropy
-    var x = MT19937_64.init(rd.gen())
-    for i in 0 ..< 50:
-      echo x.gen()
-  main()
+main:
+  var rd = RandomDevice.init()
+  discard rd.entropy
+  var x = MT19937_64.init(rd.gen())
+  for i in 0 ..< 50:
+    discard x.gen()

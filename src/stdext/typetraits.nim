@@ -12,6 +12,6 @@ macro argTyp*(fn: typed; i: static[int]): untyped =
   result = typ[i+1]
 
 
-when isMainModule:
+main:
   assert(noptr(ptr int) is int)
   assert(noptr(ref seq[float]) is seq[float])

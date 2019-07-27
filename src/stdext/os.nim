@@ -1,9 +1,10 @@
 import
+  ../stdext,
+  ./strutils,
   system/io as sysio,
   std/os as sysos,
   std/osproc,
-  std/streams,
-  ./strutils
+  std/streams
 
 export
   sysos except File,
@@ -49,6 +50,6 @@ proc exec*(command: string; args: openarray[string] = [];
 proc execLive*(command: string, args: openarray[string] = []): int =
   execCmd(command & " " & args.join(" "))
 
-when isMainModule:
+main:
   let (output, code) = exec("echo", ["test"])
   doAssert(code == 0 and output == "test\n")

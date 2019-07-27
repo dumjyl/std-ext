@@ -1,4 +1,5 @@
 import
+  ../stdext,
   ./macros,
   std/strutils as sysstrutils
 
@@ -12,6 +13,6 @@ proc noStyle*(s: string): string =
   if result.len > 0:
     result[0] = s[i]
 
-when isMainModule:
+main:
   doAssert("_teST".noStyle == "test")
   doAssert("TesT_t_T__".noStyle == "Testtt")

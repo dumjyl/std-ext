@@ -43,7 +43,13 @@ proc high*[T: uint|uint32|uint64](x: typedesc[T]): T =
   elif sizeof(T) == 4: result = cast[T](-1'i32)
   else: {.error: "unsupported bitsize for high(uint(|32|64))".}
 
-when isMainModule:
+template main*(body: untyped) =
+  when isMainModule:
+    proc implMain =
+      body
+    implMain()
+
+main:
   type
     Obj = object
       str: string

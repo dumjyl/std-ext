@@ -1,5 +1,5 @@
 
-version = "0.3.0"
+version = "0.3.1"
 author = "Jasper Jenkins"
 description = "stdlib extensions for nim for me"
 license = "MIT"
@@ -13,6 +13,8 @@ task test, "run tests":
     2: "stdext/strutils.nim",
     3: "stdext/os.nim",
     4: "stdext.nim",
+    5: "stdext/cffi/str.nim",
+    6: "stdext/random.nim",
   ]
   for srcFile in srcFiles:
     exec "nim cpp -r src/" & srcFile
