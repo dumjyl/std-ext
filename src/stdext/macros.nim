@@ -18,7 +18,7 @@ type
   TypeKind* = NimTypeKind
 
 proc `$`*(n: Node): string =
-  let lit = "Literal:\n" & repr(n).indent(2)
+  let lit = "Literal:" & repr(n).indent(2)
   let tree = "Tree:\n" & treeRepr(n).indent(2)
   result = "NimNode:\n" & (lit & "\n" & tree).indent(2)
 

@@ -1,4 +1,5 @@
 import
+  ../stdext,
   ./macros
 
 template noptr*(T: typedesc[ref|ptr]): typedesc =

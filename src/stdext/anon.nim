@@ -42,7 +42,6 @@ main:
   x = FullInit
   assert(x == FullInit)
   assert typeof(x) is EnumNoInitPartialInitFullInit
-  discard _.NoInit
 
   proc foo(kind: Enum(*KA, KB, KC)): int =
     result = ord(kind)
