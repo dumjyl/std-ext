@@ -11,20 +11,37 @@ export
   ProcessOption
 
 type
-  File = object
+  File* = object
     impl: sysio.File
+  ScopedFile* = object
+    filename*: string
 
 proc `=destroy`*(file: var File) =
-  close(file.impl)
+  file.impl.close()
 
-proc initFile*(filepath: string; mode = fmRead): File =
-  result = File(impl: filepath.open(mode))
+proc initFile*(filename: string; mode = fmRead): File =
+  result = File(impl: filename.open(mode))
 
 proc len*(file: File): int64 =
   result = getFileSize(file.impl)
 
-proc readBytes*(filepath: string): seq[uint8] =
-  let file = initFile(filepath)
+proc write(file: var File; s: string) =
+  file.impl.write(s)
+
+proc readAllAs(file: File, T: typedesc[char]): string =
+  result = newString(file.len)
+  doAssert(result.len == file.impl.readBuffer(addr result[0], result.len))
+
+proc readAllAs(file: File, T: typedesc): seq[T] =
+  let flen = file.len
+  if flen mod sizeof(T) != 0:
+    raise newException(IOError, "file of size " & flen &
+                       " not interpretable as " $T & "s")
+  result = newSeq[T](flen div sizeof(T))
+  doAssert(flen * sizeof(T) == file.impl.readBuffer(addr result[0], result.len))
+
+proc readBytes*(filename: string): seq[uint8] =
+  let file = initFile(filename)
   result = newSeq[uint8](file.len)
   doAssert(result.len == file.impl.readBytes(result, 0, result.len))
 
@@ -50,6 +67,32 @@ proc exec*(command: string; args: openarray[string] = [];
 proc execLive*(command: string, args: openarray[string] = []): int =
   execCmd(command & " " & args.join(" "))
 
+proc `=destroy`*(scopedFile: var ScopedFile) =
+  removeFile(scopedFile.filename)
+
+proc initScopedFile*(filename, contents: string): ScopedFile =
+  writeFile(filename, contents)
+  result = ScopedFile(filename: filename)
+
+proc getTmpFilename: string =
+  once: createDir(getTempDir()/"scopedtmp")
+  var count {.global.} = 0
+  result = getTempDir()/"scopedtmp"/"tmp" & $count
+  inc(count)
+
+proc getTmpFile*(contents: string): ScopedFile =
+  result = initScopedFile(getTmpFilename(), contents)
+
+template getTmpFilePath(contents: string): string =
+  var scopedFile = initScopedFile(contents)
+  scopedFile.filepath
+
+when isMainModule:
+  proc testsScopedFileReturnsPath(): string =
+    let tmpFile = getTmpFile("scopetest")
+    result = tmpFile.filename[0..^1] # bug
+
 main:
   let (output, code) = exec("echo", ["test"])
   doAssert(code == 0 and output == "test\n")
+  doAssert(not fileExists(testsScopedFileReturnsPath()))

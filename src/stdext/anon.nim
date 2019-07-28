@@ -12,7 +12,7 @@ const
   _* = Anonymous()
   fieldLookup = CacheTable"stdext/anon.fieldLookup"
 
-macro Enum*(fields: varargs[untyped]): untyped =
+macro `enum`*(fields: varargs[untyped]): untyped =
   var name = "Enum"
   var public = false
   if fields[0].kind == nnkPrefix and `id==`(fields[0][0], "*"):
@@ -28,7 +28,7 @@ macro Enum*(fields: varargs[untyped]): untyped =
     if public:
       fieldLookup[noStyle(f.str)] = result
 
-proc findEnumType(fieldStr: string): NimNode =
+proc findEnumType(fieldStr: string): Node =
   for field, enumType in fieldLookup:
     if noStyle(fieldStr) == field:
       return enumType
@@ -37,12 +37,14 @@ proc findEnumType(fieldStr: string): NimNode =
 macro `.`*(_: Anonymous; field: untyped): untyped =
   result = nnkDotExpr.tree(findEnumType(field.str), field)
 
+when isMainModule:
+  proc foo(kind: `enum`(*KA, KB, KC)): int =
+    result = ord(kind)
+
 main:
-  var x: Enum(NoInit, PartialInit, FullInit)
+  var x: `enum`(NoInit, PartialInit, FullInit)
   x = FullInit
   assert(x == FullInit)
   assert typeof(x) is EnumNoInitPartialInitFullInit
 
-  proc foo(kind: Enum(*KA, KB, KC)): int =
-    result = ord(kind)
   doAssert(foo(_.KB) == 1)

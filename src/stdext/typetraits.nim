@@ -12,7 +12,6 @@ macro argTyp*(fn: typed; i: static[int]): untyped =
   typ.needsKind(ntyProc)
   result = typ[i+1]
 
-
 main:
   assert(noptr(ptr int) is int)
   assert(noptr(ref seq[float]) is seq[float])

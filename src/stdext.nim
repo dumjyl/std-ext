@@ -19,7 +19,7 @@ proc `$`*(x: ref|ptr): string =
     else:
       result &= "(" & $x[] & ")"
 
-proc `$`*(x: object): string =
+proc `$`(x: object): string =
   result = $typeof(x) & system.`$`(x)
 
 type
