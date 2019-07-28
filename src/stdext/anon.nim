@@ -1,4 +1,5 @@
 import
+  ../stdext,
   ./strutils,
   ./macros
 
@@ -13,8 +14,10 @@ const
 
 macro Enum*(fields: varargs[untyped]): untyped =
   var name = "Enum"
+  var public = false
   if fields[0].kind == nnkPrefix and `id==`(fields[0][0], "*"):
     fields[0] = fields[0][1]
+    public = true
   for f in fields:
     f.needsKind(nnkIdent)
     name &= f.str
@@ -22,7 +25,8 @@ macro Enum*(fields: varargs[untyped]): untyped =
     genTypeDef(id(name), nnkEnumTy.tree(empty & sons(fields))),
     id(name))
   for f in fields:
-    fieldLookup[noStyle(f.str)] = result
+    if public:
+      fieldLookup[noStyle(f.str)] = result
 
 proc findEnumType(fieldStr: string): NimNode =
   for field, enumType in fieldLookup:
@@ -34,8 +38,12 @@ macro `.`*(_: Anonymous; field: untyped): untyped =
   result = nnkDotExpr.tree(findEnumType(field.str), field)
 
 main:
-  var x: Enum(*NoInit, PartialInit, FullInit)
+  var x: Enum(NoInit, PartialInit, FullInit)
   x = FullInit
   assert(x == FullInit)
   assert typeof(x) is EnumNoInitPartialInitFullInit
   discard _.NoInit
+
+  proc foo(kind: Enum(*KA, KB, KC)): int =
+    result = ord(kind)
+  doAssert(foo(_.KB) == 1)
