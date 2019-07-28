@@ -74,18 +74,18 @@ proc initScopedFile*(filename, contents: string): ScopedFile =
   writeFile(filename, contents)
   result = ScopedFile(filename: filename)
 
-proc getTmpFilename: string =
+proc getTmpFilename(ext: string): string =
   once: createDir(getTempDir()/"scopedtmp")
   var count {.global.} = 0
-  result = getTempDir()/"scopedtmp"/"tmp" & $count
+  result = getTempDir()/"scopedtmp"/"tmp" & $count & ext
   inc(count)
 
-proc initScopedTemp*(contents: string): ScopedFile =
-  result = initScopedFile(getTmpFilename(), contents)
+proc initScopedTemp*(contents: string, ext = ""): ScopedFile =
+  result = initScopedFile(getTmpFilename(ext), contents)
 
-template getTempFile*(contents: string): string =
-  var scopedFile = initScopedFile(contents)
-  scopedFile.filepath
+template getTempFile*(contents: string; ext = ""): string =
+  var scopedFile = initScopedTemp(contents, ext)
+  scopedFile.filename
 
 when isMainModule:
   proc testsScopedFileReturnsPath(): string =

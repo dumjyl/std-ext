@@ -27,6 +27,10 @@ type
     low(x)
     high(x)
 
+template noptr*[T](PtrT: typedesc[ptr T]): typedesc = T
+
+template noref*[T](RefT: typedesc[ref T]): typedesc = T
+
 template span*(n: int): untyped =
   0 .. n
 
@@ -66,3 +70,6 @@ main:
            "AnonRefObj(str: \"anon ref obj str\", i32: 53)")
   doAssert($default(ptr int) == "ptr int(nil)")
   doAssert($default(AnonRefObj) == "AnonRefObj(nil)")
+
+  assert(noptr(ptr int) is int)
+  assert(noref(ref seq[float]) is seq[float])
