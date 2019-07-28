@@ -80,16 +80,16 @@ proc getTmpFilename: string =
   result = getTempDir()/"scopedtmp"/"tmp" & $count
   inc(count)
 
-proc getTmpFile*(contents: string): ScopedFile =
+proc initScopedTemp*(contents: string): ScopedFile =
   result = initScopedFile(getTmpFilename(), contents)
 
-template getTmpFilePath(contents: string): string =
+template getTempFile*(contents: string): string =
   var scopedFile = initScopedFile(contents)
   scopedFile.filepath
 
 when isMainModule:
   proc testsScopedFileReturnsPath(): string =
-    let tmpFile = getTmpFile("scopetest")
+    let tmpFile = initScopedTemp("scopetest")
     result = tmpFile.filename[0..^1] # bug
 
 main:
