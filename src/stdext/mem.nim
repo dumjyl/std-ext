@@ -1,3 +1,6 @@
+import
+  ../stdext
+
 type
   FatPointer* = object
     data*: pointer
@@ -24,3 +27,8 @@ proc low*[T](fp: FatPtr[T]): int =
 proc high*[T](fp: FatPtr[T]): int =
   result = fp.len - 1
 
+proc to*(fp: FatPointer; T: typedesc[string]): string =
+  if fp.data != nil:
+    result = newStringOfCap(fp.len)
+    for i in span(fp):
+      result.add(char(fp[i]))

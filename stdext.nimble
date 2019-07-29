@@ -1,5 +1,5 @@
 
-version = "0.3.5"
+version = "0.3.6"
 author = "Jasper Jenkins"
 description = "stdlib extensions for nim for me"
 license = "MIT"
@@ -9,15 +9,15 @@ requires "nim >= 0.20.2"
 
 task test, "run tests":
   const srcFiles = [
-    1: "stdext.nim",
-    2: "stdext/anon.nim",
-    3: "stdext/cffi.nim",
-    4: "stdext/macros.nim",
-    5: "stdext/mem.nim",
-    6: "stdext/meta.nim",
-    7: "stdext/os.nim",
-    8: "stdext/random.nim",
-    9: "stdext/strutils.nim",
+    01: "stdext.nim",
+    02: "stdext/anon.nim",
+    03: "stdext/cffi.nim",
+    04: "stdext/macros.nim",
+    05: "stdext/mem.nim",
+    06: "stdext/meta.nim",
+    07: "stdext/os.nim",
+    08: "stdext/random.nim",
+    09: "stdext/strutils.nim",
     10: "stdext/types.nim",
     11: "stdext/typetraits.nim",
     12: "stdext/cffi/str.nim",
