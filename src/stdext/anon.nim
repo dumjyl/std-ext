@@ -37,11 +37,11 @@ proc findEnumType(fieldStr: string): Node =
 macro `.`*(_: Anonymous; field: untyped): untyped =
   result = nnkDotExpr.tree(findEnumType(field.str), field)
 
-when isMainModule:
+test:
   proc foo(kind: `enum`(*KA, KB, KC)): int =
     result = ord(kind)
 
-main:
+testFn:
   var x: `enum`(NoInit, PartialInit, FullInit)
   x = FullInit
   assert(x == FullInit)

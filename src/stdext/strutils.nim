@@ -13,6 +13,6 @@ proc noStyle*(s: string): string =
   if result.len > 0:
     result[0] = s[i]
 
-main:
+testFn:
   doAssert("_teST".noStyle == "test")
   doAssert("TesT_t_T__".noStyle == "Testtt")

@@ -24,7 +24,7 @@ templUnroll(int, int, span(xs))
 templUnroll(openarray[int], int, xs)
 templUnroll(openarray[string], string, xs)
 
-main:
+testFn:
   var sum = 0
   unroll x, @[1, 2, 3], true:
     var y = x * 2

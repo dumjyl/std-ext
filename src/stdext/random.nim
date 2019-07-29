@@ -140,7 +140,7 @@ proc max*(self: typedesc[RandomDevice]): cuint
 proc entropy*(self: RandomDevice): cdouble
   {.importcpp: "#.entropy()", header: H.}
 
-main:
+testFn:
   var rd = RandomDevice.init()
   discard rd.entropy
   var x = MT19937_64.init(rd.gen())

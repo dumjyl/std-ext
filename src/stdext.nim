@@ -47,13 +47,27 @@ proc high*[T: uint|uint32|uint64](x: typedesc[T]): T =
   elif sizeof(T) == 4: result = cast[T](-1'i32)
   else: {.error: "unsupported bitsize for high(uint(|32|64))".}
 
-template main*(body: untyped) =
+template main*(stmts: untyped) =
   when isMainModule:
-    proc implMain =
-      body
-    implMain()
+    stmts
 
-main:
+template mainFn*(stmts: untyped) =
+  main:
+    proc implMainFn =
+      stmts
+    implMainFn()
+
+template test*(stmts: untyped) =
+  when isMainModule and defined(testing):
+    stmts
+
+template testFn*(stmts: untyped) =
+  test:
+    proc implTestFn =
+      stmts
+    implTestFn()
+
+test:
   type
     Obj = object
       str: string
@@ -63,11 +77,12 @@ main:
       str: string
       i32: int32
 
+testFn:
   doAssert($Obj(str: "obj str", i32: 3) == "Obj(str: \"obj str\", i32: 3)")
   doAssert($RefObj(str: "ref obj str", i32: 7) ==
-           "RefObj(str: \"ref obj str\", i32: 7)")
+            "RefObj(str: \"ref obj str\", i32: 7)")
   doAssert($AnonRefObj(str: "anon ref obj str", i32: 53) ==
-           "AnonRefObj(str: \"anon ref obj str\", i32: 53)")
+            "AnonRefObj(str: \"anon ref obj str\", i32: 53)")
   doAssert($default(ptr int) == "ptr int(nil)")
   doAssert($default(AnonRefObj) == "AnonRefObj(nil)")
 

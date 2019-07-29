@@ -1,5 +1,5 @@
 
-version = "0.3.6"
+version = "0.4.6"
 author = "Jasper Jenkins"
 description = "stdlib extensions for nim for me"
 license = "MIT"
@@ -23,4 +23,4 @@ task test, "run tests":
     12: "stdext/cffi/str.nim",
   ]
   for srcFile in srcFiles:
-    exec "nim cpp -r src/" & srcFile
+    exec "nim cpp -r -d:testing src/" & srcFile

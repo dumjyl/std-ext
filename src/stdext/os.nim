@@ -87,12 +87,12 @@ template getTempFile*(contents: string; ext = ""): string =
   var scopedFile = initScopedTemp(contents, ext)
   scopedFile.filename
 
-when isMainModule:
+test:
   proc testsScopedFileReturnsPath(): string =
     let tmpFile = initScopedTemp("scopetest")
     result = tmpFile.filename[0..^1] # bug
 
-main:
+testFn:
   let (output, code) = exec("echo", ["test"])
   doAssert(code == 0 and output == "test\n")
   doAssert(not fileExists(testsScopedFileReturnsPath()))

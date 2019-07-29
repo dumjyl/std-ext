@@ -42,7 +42,7 @@ proc high*(self: String): int =
 proc `$`*(s: String): string =
   result = $s.cStr()
 
-main:
+testFn:
   var x = String.init()
   x.add('a')
   x.add('b')
