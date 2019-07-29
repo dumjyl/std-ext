@@ -1,12 +1,11 @@
 import
-  ../stdext,
   ./macros
 
 proc implUnroll[T](n: NimNode; xSym: NimNode; x: T): NimNode =
   result = n
   if `id==`(n, xSym):
     result = newLit(x)
-  for i in span(n):
+  for i in 0 ..< n.len:
     n[i] = n[i].implUnroll(xSym, x)
 
 template templUnroll(TOuter, TInner, iter) =
@@ -20,13 +19,12 @@ template templUnroll(TOuter, TInner, iter) =
       else:
         result.add(stmts)
 
-templUnroll(int, int, span(xs))
+templUnroll(int, int, 0 ..< xs)
 templUnroll(openarray[int], int, xs)
 templUnroll(openarray[string], string, xs)
 
-testFn:
-  var sum = 0
-  unroll x, @[1, 2, 3], true:
-    var y = x * 2
-    sum += y
-  doAssert(sum == 12)
+macro mapStmts*(stmts, op: untyped): untyped =
+  stmts.needsKind(nnkStmtList)
+  for i in 0 ..< stmts.len:
+    stmts[i] = nnkCall.tree(op, stmts[i])
+  result = stmts

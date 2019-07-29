@@ -1,5 +1,4 @@
 import
-  ../stdext,
   std/strformat,
   std/strutils,
   std/sets,

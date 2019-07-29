@@ -1,3 +1,6 @@
+import
+  ./stdext/[macros, meta]
+
 from sugar import dump
 from strutils import split
 
@@ -20,6 +23,7 @@ proc `$`*(x: ref|ptr): string =
       result &= "(" & $x[] & ")"
 
 proc `$`(x: object): string =
+  # TODO: system.`$` creates ambiguity.
   result = $typeof(x) & system.`$`(x)
 
 type
@@ -67,6 +71,10 @@ template testFn*(stmts: untyped) =
       stmts
     implTestFn()
 
+template asserts*(stmts: untyped) =
+  # TODO: correct line info
+  mapStmts(stmts, assert)
+
 test:
   type
     Obj = object
@@ -78,13 +86,14 @@ test:
       i32: int32
 
 testFn:
-  doAssert($Obj(str: "obj str", i32: 3) == "Obj(str: \"obj str\", i32: 3)")
-  doAssert($RefObj(str: "ref obj str", i32: 7) ==
-            "RefObj(str: \"ref obj str\", i32: 7)")
-  doAssert($AnonRefObj(str: "anon ref obj str", i32: 53) ==
-            "AnonRefObj(str: \"anon ref obj str\", i32: 53)")
-  doAssert($default(ptr int) == "ptr int(nil)")
-  doAssert($default(AnonRefObj) == "AnonRefObj(nil)")
+  asserts:
+    $Obj(str: "obj str", i32: 3) == "Obj(str: \"obj str\", i32: 3)"
+    $RefObj(str: "ref obj str", i32: 7) ==
+              "RefObj(str: \"ref obj str\", i32: 7)"
+    $AnonRefObj(str: "anon ref obj str", i32: 53) ==
+              "AnonRefObj(str: \"anon ref obj str\", i32: 53)"
+    $default(ptr int) == "ptr int(nil)"
+    $default(AnonRefObj) == "AnonRefObj(nil)"
 
-  assert(noptr(ptr int) is int)
-  assert(noref(ref seq[float]) is seq[float])
+    noptr(ptr int) is int
+    noref(ref seq[float]) is seq[float]

@@ -14,5 +14,5 @@ proc noStyle*(s: string): string =
     result[0] = s[i]
 
 testFn:
-  doAssert("_teST".noStyle == "test")
-  doAssert("TesT_t_T__".noStyle == "Testtt")
+  assert "_teST".noStyle == "test"
+  assert "TesT_t_T__".noStyle == "Testtt"

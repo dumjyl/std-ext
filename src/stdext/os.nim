@@ -94,5 +94,5 @@ test:
 
 testFn:
   let (output, code) = exec("echo", ["test"])
-  doAssert(code == 0 and output == "test\n")
-  doAssert(not fileExists(testsScopedFileReturnsPath()))
+  assert code == 0 and output == "test\n"
+  assert not fileExists(testsScopedFileReturnsPath())

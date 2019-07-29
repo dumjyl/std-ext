@@ -12,4 +12,4 @@ macro ADT(T: untyped): untyped =
   discard
 
 testFn:
-  doAssert(int.tupled(3) is (int, int, int))
+  assert int.tupled(3) is (int, int, int)

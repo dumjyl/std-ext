@@ -44,7 +44,7 @@ test:
 testFn:
   var x: `enum`(NoInit, PartialInit, FullInit)
   x = FullInit
-  assert(x == FullInit)
-  assert typeof(x) is EnumNoInitPartialInitFullInit
-
-  doAssert(foo(_.KB) == 1)
+  asserts:
+    x == FullInit
+    typeof(x) is EnumNoInitPartialInitFullInit
+    foo(_.KB) == 1
