@@ -1,15 +1,12 @@
 import
-  ../stdext,
+  ../std_ext,
   ./macros
 
 macro tupled*(T: typedesc, N: static int): typedesc =
   ## Create a tuple of type T with cardinality N.
-  result = nnkPar.tree()
-  for i in span(N-1):
+  result = nnk_par.init()
+  for i in span(N):
     result.add(T)
 
 macro ADT(T: untyped): untyped =
   discard
-
-testFn:
-  assert int.tupled(3) is (int, int, int)
