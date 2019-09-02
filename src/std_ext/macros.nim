@@ -1,186 +1,301 @@
 import
-  std/strformat,
-  std/strutils,
-  std/sets,
-  std/macros as sysmacros,
-  std/macrocache
+   std/strformat,
+   std/strutils,
+   std/sets,
+   std/macros as sys_macros,
+   std/macrocache
 
 export
-  sysmacros except `$`, emit, copy_nim_tree, expect_kind, expect_len,
-                   expect_min_len
+   sys_macros except `$`, emit, copy_nim_tree, expect_kind, expect_len,
+                     expect_min_len
 
 export
-  macrocache
+   macrocache
 
 type
-  Node* = NimNode
-  NodeKind* = NimNodeKind
-  TypeKind* = NimTypeKind
-  SymKind* = NimSymKind
+   Node* = NimNode
+   NodeKind* = NimNodeKind
+   TypeKind* = NimTypeKind
+   SymKind* = NimSymKind
 
-const nnk_sym_like_kinds* = {nnk_ident, nnk_sym, nnk_open_sym_choice,
-                             nnk_closed_sym_choice}
+const
+   nnk_sym_like_kinds* = {nnk_ident, nnk_sym, nnk_open_sym_choice,
+                          nnk_closed_sym_choice}
 
 proc `$`*(n: Node): string =
-  let lit = "Literal:\n" & repr(n).indent(2)
-  let tree = "Tree:\n" & tree_repr(n).indent(2)
-  result = "NimNode:\n" & (lit & "\n" & tree).indent(2)
+   let lit = "Literal:\n" & repr(n).indent(2)
+   let tree = "Tree:\n" & tree_repr(n).indent(2)
+   result = "Node:\n" & (lit & "\n" & tree).indent(2)
 
-proc init*(_: typedesc[NimNode], kind: NodeKind): Node =
-  result = new_NimNode(kind)
+proc init*(Self: typedesc[NimNode], kind: NodeKind): Node =
+   result = new_NimNode(kind)
 
 proc init*(kind: NodeKind, sons: varargs[Node]): Node =
-  result = Node.init(kind)
-  for son in sons:
-    result.add(son)
+   result = Node.init(kind)
+   for son in sons:
+      result.add(son)
 
 proc tree*(kind: NodeKind, sons: varargs[Node]): Node =
-  result = kind.init(sons)
+   result = kind.init(sons)
 
 proc node*(kind: NodeKind): Node =
-  result = kind.init()
+   result = kind.init()
 
-proc node*(kind: NodeKind; str: string): Node =
-  result = kind.init()
-  result.str_val = str
+proc node*(kind: NodeKind, val: string): Node =
+   result = kind.init()
+   result.str_val = val
 
-proc id*(name: string, public = false, pragmas: openarray[Node] = []): Node =
-  result = ident(name)
-  if public:
-    result = postfix(result, "*")
-  if pragmas.len > 0:
-    result = nnk_pragma_expr.tree(result, nnk_pragma.tree(pragmas))
+proc node*(kind: NodeKind, val: int): Node =
+   result = kind.init()
+   result.int_val = val
+
+proc id*(name: string, public = false, pragmas: openarray[Node] = [],
+         backtick = false): Node =
+   result = ident(name)
+   if backtick:
+      result = nnk_acc_quoted.init(result)
+   if public:
+      result = postfix(result, "*")
+   if pragmas.len > 0:
+      result = nnk_pragma_expr.tree(result, nnk_pragma.tree(pragmas))
 
 proc public_id*(name: string, pragmas: openarray[Node] = []): Node =
-  result = id(name, true, pragmas)
+   result = id(name, true, pragmas)
 
 template empty*: Node =
-  nnk_empty.init()
+   nnk_empty.init()
 
 macro dump_ast*(body: untyped): untyped =
-  echo body
+   echo body
 
 macro dump_typed_ast*(body: typed): untyped =
-  echo body
+   echo body
 
 proc gen_type_def*(name: Node, def: Node): Node =
-  result =
-    nnk_type_section.tree(
-      nnk_type_def.tree(
-        name,
-        empty,
-        def))
+   result =
+      nnk_type_section.tree(
+         nnk_type_def.tree(
+            name,
+            empty,
+            def))
 
 proc sons*(n: Node): seq[Node] =
-  for son in n:
-    result.add(son)
+   for son in n:
+      result.add(son)
 
 proc typ*(n: Node): Node =
-  result = get_type(n)
+   result = get_type(n)
+
+proc typ_inst*(n: Node): Node =
+   result = get_type_inst(n)
+
+proc typ_impl*(n: Node): Node =
+   result = get_type_impl(n)
+
+proc typ_kind*(n: Node): TypeKind =
+   result = type_kind(n)
 
 proc str*(n: Node): string =
-  result = str_val(n)
+   case n.kind
+   of nnk_acc_quoted, nnk_closed_sym_choice, nnk_open_sym_choice:
+      result = n[0].str
+   else:
+      result = str_val(n)
 
 proc `id==`*(a: Node, b: string): bool =
-  result = eq_ident(a, b)
+   result = eq_ident(a, b)
 
 proc `id!=`*(a: Node, b: string): bool =
-  result = not eq_ident(a, b)
+   result = not eq_ident(a, b)
 
 proc `id==`*(a: Node, b: Node): bool =
-  result = eq_ident(a, b)
+   result = eq_ident(a, b)
 
 proc `id!=`*(a: Node, b: Node): bool =
-  result = not eq_ident(a, b)
+   result = not eq_ident(a, b)
+
+proc `type==`*(a: Node, b: Node): bool =
+   result = same_type(a, b)
+
+proc `type!=`*(a: Node, b: Node): bool =
+   result = not same_type(a, b)
+
+proc `type==`*(a: Node, b: typedesc): bool =
+   result = `type==`(a, get_type(b))
+
+proc `type!=`*(a: Node, b: typedesc): bool =
+   result = not `type==`(a, get_type(b))
 
 proc needs_len*(n: Node, len: int) =
-  if n.len != len:
-    error(&"bad node len. needs<{len}> got<{n.len}>\n{n}")
+   if n.len != len:
+      error(&"bad node len. needs<{len}> got<{n.len}>\n{n}")
 
 proc needs_kind*(n: Node; kind: NodeKind) =
-  if n.kind != kind:
-    error(&"bad node kind. needs<{kind}> got<{n.kind}>\n{n}")
+   if n.kind != kind:
+      error(&"bad node kind. needs<{kind}> got<{n.kind}>\n{n}")
 
 proc needs_kind*(n: Node; kinds: set[NodeKind]) =
-  if n.kind notin kinds:
-    error(&"bad node kind. needs<{kinds}> got<{n.kind}>\n{n}")
+   if n.kind notin kinds:
+      error(&"bad node kind. needs<{kinds}> got<{n.kind}>\n{n}")
 
 proc needs_kind*(n: Node; kind: TypeKind) =
-  if n.type_kind != kind:
-    error(&"bad node type kind. needs<{kind}> got<{n.typeKind}>\n{n}")
+   if n.typ_kind != kind:
+      error(&"bad node type kind. needs<{kind}> got<{n.typeKind}>\n{n}")
 
 proc needs_id*(n: Node; idents: varargs[string]) =
-  n.needs_kind(nnk_ident)
-  for ident in idents:
-    if `id==`(n, ident):
-      return
-  error(&"bad node ident. needs<{idents}> got<{n.strVal}>\n{n}")
+   n.needs_kind(nnk_ident)
+   for ident in idents:
+      if `id==`(n, ident):
+         return
+   error(&"bad node ident. needs<{idents}> got<{n.strVal}>\n{n}")
 
 proc unexp_node*(n: Node) =
-  error(&"unexpected node:\n{n}")
-
-proc gen_blk_stmts*(stmts: varargs[Node]): Node =
-  result = nnk_block_stmt.tree(empty, nnk_stmt_list.tree(stmts))
+   error(&"unexpected node:\n{n}")
 
 proc low*(n: Node): int =
-  result = 0
+   result = 0
 
 proc high*(n: Node): int =
-  result = n.len - 1
+   result = n.len - 1
 
 proc gen_def*(name: Node, typ: Node, val: Node): Node =
-  result = nnk_ident_defs.tree(name, typ, val)
+   result = nnk_ident_defs.tree(name, typ, val)
+
+proc gen_def_id*(name: Node): Node =
+   result = nnk_ident_defs.tree(name, empty, empty)
 
 proc gen_def_val*(name: Node, val: Node): Node =
-  result = nnk_ident_defs.tree(name, empty, val)
+   result = nnk_ident_defs.tree(name, empty, val)
 
 proc gen_def_typ*(name: Node, typ: Node): Node =
-  result = nnk_ident_defs.tree(name, typ, empty)
+   result = nnk_ident_defs.tree(name, typ, empty)
 
-proc `gen@:@`*(a: Node, b: Node): Node =
-  result = nnk_expr_colon_expr.tree(a, b)
+proc gen_lit*(val: string): Node =
+   result = nnk_str_lit.node(val)
 
-proc gen_lit*(str: string): Node =
-  result = nnk_str_lit.node(str)
+proc gen_lit*(val: int): Node =
+   result = nnk_int_lit.node(val)
 
 proc call_stmt_field*(n: Node): tuple[lhs: Node, rhs: Node] =
-  n.needs_kind(nnk_ident)
-  n.needs_len(2)
-  n[0].needs_kind(nnk_ident)
-  n[1].needs_kind(nnk_stmt_list)
-  n[1].needs_len(1)
-  result.lhs = n[0]
-  result.rhs = n[1][0]
+   n.needs_kind(nnk_ident)
+   n.needs_len(2)
+   n[0].needs_kind(nnk_ident)
+   n[1].needs_kind(nnk_stmt_list)
+   n[1].needs_len(1)
+   result.lhs = n[0]
+   result.rhs = n[1][0]
 
 proc make_public*(n: Node): Node =
-  result = n
-  case n.kind:
-  of nnk_ident_defs:
-    n[0] = make_public(n[0])
-  of nnk_ident:
-    result = postfix(n, "*")
-  else:
-    unexp_node(n)
+   result = n
+   case n.kind:
+   of nnk_ident_defs:
+      n[0] = make_public(n[0])
+   of nnk_ident:
+      result = postfix(n, "*")
+   else:
+      unexp_node(n)
 
 proc gen_var*(name: Node, typ: Node, val: Node): Node =
-  result = nnk_var_section.init(gen_def(name, typ, val))
+   result = nnk_var_section.init(gen_def(name, typ, val))
 
 proc gen_var_val*(name: Node, val: Node): Node =
-  result = nnk_var_section.init(gen_def_val(name, val))
+   result = nnk_var_section.init(gen_def_val(name, val))
 
 proc gen_var_typ*(name: Node, typ: Node): Node =
-  result = nnk_var_section.init(gen_def_typ(name, typ))
+   result = nnk_var_section.init(gen_def_typ(name, typ))
 
 proc gen_asgn*(a: Node, b: Node): Node =
-  result = nnk_asgn.init(a, b)
+   result = nnk_asgn.init(a, b)
 
 proc gen_call*(name: Node, args: varargs[Node]): Node =
-  result = nnk_call.init(name)
-  for arg in args:
-    result.add(arg)
+   result = nnk_call.init(name)
+   for arg in args:
+      result.add(arg)
 
 proc gen_call*(name: string, args: varargs[Node]): Node =
-  result = gen_call(id(name), args)
+   result = gen_call(id(name), args)
 
 proc stmt_concat*(a: Node, b: Node): Node =
-  result = nnk_stmt_list.init(a, b)
+   result = nnk_stmt_list.init(a, b)
+
+proc gen_colon*(a: Node, b: Node): Node =
+   result = nnk_expr_colon_expr.init(a, b)
+
+proc gen_dot*(a: Node, b: Node): Node =
+   result = nnk_dot_expr.init(a, b)
+
+proc gen_dot*(a: Node, b: string): Node =
+   result = nnk_dot_expr.init(a, id(b))
+
+proc gen_index*(x: Node, idxs: varargs[Node]): Node =
+   result = nnk_bracket_expr.init(x)
+   result.add(idxs)
+
+proc gen_typ*[T: typedesc](TArg: typedesc[T], InnerT: Node): Node =
+   nnk_bracket_expr.init(id"typedesc", InnerT)
+
+proc elem_typ*(n: Node): Node =
+   case n.typ_kind:
+   of nty_array:
+      result = n[2]
+   of nty_sequence:
+      result = n[1]
+   of nty_typedesc:
+      result = n[1]
+   else:
+      error("elem_typ unhandled case: " & $n.typ_kind, n)
+
+proc ord_low*(n: Node): BiggestInt =
+   case n.typ_kind:
+   of nty_array:
+      result = ord_low(n[1])
+   of nty_range:
+      result = n[1].int_val
+   else:
+      error("ord_low unhandled case: " & $n.typ_kind, n)
+
+proc ord_high*(n: Node): BiggestInt =
+   case n.typ_kind:
+   of nty_array:
+      result = ord_high(n[1])
+   of nty_range:
+      result = n[2].int_val
+   else:
+      error("ord_high unhandled case: " & $n.typ_kind, n)
+
+proc ord_len*(n: Node): BiggestInt =
+   result = ord_high(n) - ord_low(n) + 1
+
+proc unalias*(stmts: Node, expr: Node, name: string): Node =
+   if expr.kind in {nnk_ident, nnk_sym, nnkCharLit..nnkFloat128Lit}:
+      result = expr
+   else:
+      result = gen_sym(nsk_var, name)
+      stmts.add(gen_var_val(result, expr))
+
+proc gen_stmts*(stmts: varargs[Node]): Node =
+   result = nnk_stmt_list.init(stmts)
+
+proc gen_block*(n: Node): Node =
+   result = nnk_block_stmt.init(empty, n)
+
+proc gen_proc*(
+      name: Node,
+      frmls: openarray[Node],
+      ret: Node,
+      gnrcs: openarray[Node] = [],
+      stmts = gen_stmts(),
+      prgms: openarray[Node] = [],
+      kind = nnk_proc_def,
+      ): Node =
+   result = kind.init(
+      name,
+      empty,
+      nnk_generic_params.init(gnrcs),
+      nnk_formal_params.init(ret & @frmls),
+      if prgms.len > 1: nnk_pragma.init(prgms) else: empty,
+      empty,
+      stmts)
+
+proc gen_gnrc*(args: varargs[Node]): Node =
+   result = nnk_bracket_expr.init(args)

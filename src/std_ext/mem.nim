@@ -1,34 +1,49 @@
 import
-  ../std_ext
+   ../std_ext,
+   ./str_utils,
+   std/bitops
 
-type
-  FatPointer* = object
-    data*: pointer
-    len*: int
-  FatPtr*[T] = object
-    data*: ptr T
-    len*: int
+export
+   bitops
 
-proc `[]`*(fp: FatPointer, idx: int): byte =
-  result = cast[ptr UncheckedArray[byte]](fp.data)[idx]
+proc offset_u8*(x: pointer, i: isize): pointer {.inline.} =
+   ## offset a ptr by ``i`` bytes
+   result = (x.bit_cast(isize) + i).bit_cast(pointer)
 
-proc low*(fp: FatPointer): int =
-  result = 0
+proc offset*(x: pointer, i: isize): pointer {.inline.} =
+   ## offset a ptr by ``i`` bytes
+   result = x.offset_u8(i)
 
-proc high*(fp: FatPointer): int =
-  result = fp.len - 1
+proc offset_u8*[T](x: ptr T, i: isize): ptr T {.inline.} =
+   ## offset a ptr by ``i`` bytes
+   result = (x.bit_cast(isize) + i).bit_cast(ptr T)
 
-proc `[]`*[T](fp: FatPtr[T], idx: int): T =
-  result = cast[ptr UncheckedArray[T]](fp.data)[idx]
+proc offset*[T](x: ptr T, i: isize): ptr T {.inline.} =
+   ## offset a ptr by ``size_of(T)`` bytes
+   result = x.offset_u8(i * size_of(T))
 
-proc low*[T](fp: FatPtr[T]): int =
-  result = 0
+proc offset_u8*[T](
+      x: ptr UncheckedArray[T],
+      i: isize
+      ): ptr UncheckedArray[T] {.inline.} =
+   ## offset a ptr by ``i`` bytes
+   result = (x.bit_cast(isize) + i).bit_cast(ptr UncheckedArray[T])
 
-proc high*[T](fp: FatPtr[T]): int =
-  result = fp.len - 1
+proc offset*[T](
+      x: ptr UncheckedArray[T],
+      i: isize
+      ): ptr UncheckedArray[T] {.inline.} =
+   ## offset a ptr by ``size_of(T)`` bytes
+   result = x.offset_u8(i * size_of(T))
 
-proc to*(fp: FatPointer, T: typedesc[string]): string =
-  if fp.data != nil:
-    result = string.of_cap(fp.len)
-    for i in span(fp):
-      result.add(char(fp[i]))
+proc repr_bin*(x: pointer|SomeNumber): string =
+   result = string.init(bit_size_of(x))
+   when x is pointer:
+      var x = x.bit_cast(usize)
+   for i in rev(span(result)):
+      result[^(i+1)] = if bit_and(x shr i, 1) == 0: '0' else: '1'
+
+proc repr_hex*(x: pointer|SomeNumber): string =
+   when x is pointer:
+      var x = x.bit_cast(usize)
+   result = to_hex(x)

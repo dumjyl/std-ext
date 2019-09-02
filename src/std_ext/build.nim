@@ -1,3 +1,6 @@
+import
+  ./macros
+
 type
   CppStd* = enum
     cpp_std03
@@ -12,7 +15,20 @@ type
 template include_path*(path: static string) =
   {.pass_c: "-I" & path.}
 
-template set_cpp_std*(std: static CppStd) =
+template link_path*(path: static string) =
+  {.pass_l: "-L" & path.}
+
+template link*(lib: static string) =
+  {.pass_l: "-l" & lib.}
+
+macro link*(libs: static openarray[string]) =
+  result = nnk_stmt_list.init()
+  for lib in libs:
+    result.add(gen_call("link", gen_lit(lib)))
+
+template set_cpp_std*(std: static CppStd = cpp_std11) =
+  when not defined(cpp):
+    {.error: "module only supports c++ backend".}
   {.pass_c: "-std=" & [cpp_std03: "c++03", cpp_std_gnu03: "gnu++03",
                        cpp_std11: "c++11", cpp_std_gnu11: "gnu++11",
                        cpp_std17: "c++17", cpp_std_gnu17: "gnu++17",
