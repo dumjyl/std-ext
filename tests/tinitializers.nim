@@ -28,5 +28,15 @@ main_proc:
       assert(x[^1] == 43)
    block:
       let x = TInitOther[int32].init_from(TInit.init("123", 4'i32, ['a', 'b']))
-      assert(x.str == "123")
-      assert(x.i32 == 4'i32)
+      let y = TInit[string].init_ref("ref", 64'i32, "inited")
+      let z = TInit[string].init_ptr(y[])
+      block_of assert:
+         x.str == "123"
+         x.i32 == 4'i32
+         y.str == "ref"
+         y.i32 == 64'i32
+         y.val == "inited"
+         z.str == "ref"
+         z.i32 == 64'i32
+         z.val == "inited"
+      dealloc(z)

@@ -10,14 +10,11 @@ type
 proc init*: cpp_string {.attach,
    import_cpp: "std::string()", constructor, header: H.}
 
-proc init*(n: c_size, c: char): cpp_string {.attach,
-   import_cpp: "std::string(##, #)", constructor, header: H.}
+proc init*(n: isize, c: char): cpp_string {.attach,
+   import_cpp: "std::string(@)", constructor, header: H.}
 
 proc init*(c_str: c_string): cpp_string {.attach,
-   import_cpp: "std::string(##)", constructor, header: H.}
-
-proc init*(str: string): cpp_string {.attach.} =
-   result = cpp_string.init(str.c_string)
+   import_cpp: "std::string(@)", constructor, header: H.}
 
 proc c_str*(self: cpp_string): c_string
    {.import_cpp: "#.c_str()", header: H.}
@@ -28,29 +25,43 @@ proc size*(self: cpp_string): c_size
 proc push_back*(self: var cpp_string; c: char)
    {.import_cpp: "#.push_back(@)", header: H.}
 
-proc `[]`*(self: cpp_string, i: int)
+proc `[]`*(self: cpp_string, i: isize): char
    {.import_cpp: "#[#]", header: H.}
 
-proc `[]`*(self: var cpp_string, i: int): var char
+proc `[]`*(self: var cpp_string, i: isize): var char
    {.import_cpp: "#[#]", header: H.}
 
-proc `[]=`*(self: var cpp_string, i: int, c: char)
+proc `[]=`*(self: var cpp_string, i: isize, c: char)
    {.import_cpp: "#[#] = #", header: H.}
 
-proc add*(self: var cpp_string, c: char) =
+proc add*(self: var cpp_string, c: char) {.inline.} =
    self.push_back(c)
 
-proc len*(self: cpp_string): int =
-   result = int(self.size())
+proc len*(self: cpp_string): isize {.inline.} =
+   result = isize(self.size())
 
-proc low*(self: cpp_string): int =
+proc low*(self: cpp_string): isize {.inline.} =
    result = 0
 
-proc high*(self: cpp_string): int =
+proc high*(self: cpp_string): isize {.inline.} =
    result = self.len - 1
 
-proc `$`*(s: cpp_string): string =
-   result = $s.c_str()
+template span*(self: cpp_string): isize =
+   0 .. self.len - 1
+
+iterator items*(self: cpp_string): char {.inline.} =
+   for i in span(self):
+      yield self[i]
+
+proc init*(str: string): cpp_string {.attach, inline.} =
+   result = cpp_string.init()
+   for c in str:
+      result.add(c)
+
+proc `$`*(str: cpp_string): string {.inline.} =
+   result = string.init()
+   for c in str:
+      result.add(c)
 
 test_proc:
    var x = cpp_string.init()

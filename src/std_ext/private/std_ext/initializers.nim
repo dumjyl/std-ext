@@ -75,6 +75,34 @@ proc init*[T: ref object]: T {.attach, inline.} =
    for f in fields(result):
       init(f)
 
+proc init_ref*[T](val: T): ref T {.attach: T, inline.} =
+   result = new(T)
+   result[] = val
+
+proc init_ptr*[T](val: T): ptr T {.attach: T, inline.} =
+   result = create(T)
+   result[] = val
+
+macro init_ref*(T: typedesc[object], args: varargs[typed]): ref {.inline.} =
+   let sym = nsk_var.init("x")
+   result = gen_stmts(gen_var_val(sym, "new".gen_call(T)))
+   var call = "init".gen_call(T)
+   for arg in args:
+      call.add(arg)
+   result.add(nnk_asgn.init(nnk_deref_expr.init(sym), call))
+   result.add(sym)
+   result = gen_block(result)
+
+macro init_ptr*(T: typedesc[object], args: varargs[untyped]): ptr {.inline.} =
+   let sym = nsk_var.init("x")
+   result = gen_stmts(gen_var_val(sym, "create".gen_call(T)))
+   var call = "init".gen_call(T)
+   for arg in args:
+      call.add(arg)
+   result.add(nnk_asgn.init(nnk_deref_expr.init(sym), call))
+   result.add(sym)
+   result = gen_block(result)
+
 proc init*[T: enum]: T {.attach, inline.} =
    result = low(T)
 
