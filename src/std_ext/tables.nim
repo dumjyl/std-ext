@@ -1,9 +1,9 @@
 import
    ../std_ext,
-   std/tables
+   std/tables as sys_tables
 
 export
-   tables
+   sys_tables
 
 proc init*[K, V](cap = default_initial_size): Table[K, V] {.attach, inline.} =
    result = init_Table[K, V](right_size(cap))

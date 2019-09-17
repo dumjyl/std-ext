@@ -13,3 +13,5 @@ type
    isize* = int
    f32* = float32
    f64* = float64
+   StackRecords* = object|tuple
+   Records* = object|ref object|tuple

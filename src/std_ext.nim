@@ -1,8 +1,9 @@
 import
-   std_ext/private/std_ext/[types, attachs, initializers, meta, mem, dollars,
-                            errors, type_traits, modes, c_strs]
+   std_ext/private/std_ext/[iterators, types, attachs, initializers, meta, mem,
+                            dollars, errors, type_traits, modes, c_strs]
 
 export
+   iterators,
    types,
    attachs,
    initializers,
@@ -17,19 +18,6 @@ export
 from sugar import dump
 export dump
 
-iterator items*(T: typedesc[bool]): bool {.inline.} =
-   yield false
-   yield true
-
-template span*(n: isize): untyped =
-   0 ..< n
-
-template span*(x: untyped): untyped =
-   low(x) .. high(x)
-
-template rev*[T](`range`: Slice[T]): T =
-   countdown(`range`.b, `range`.a)
-
 template loop*(label: untyped, stmts: untyped): untyped =
    block label:
       while true:
@@ -39,7 +27,7 @@ template loop*(stmts: untyped): untyped =
    while true:
       stmts
 
-proc low*[T: u32|u64|usize](x: typedesc[T]): T =
+proc low*[T: u32|u64|usize](PT: typedesc[T]): T =
    when size_of(T) == 8:
       result = cast[T](0'i64)
    elif size_of(T) == 4:
@@ -47,7 +35,7 @@ proc low*[T: u32|u64|usize](x: typedesc[T]): T =
    else:
       {.error: "unsupported bitsize for low(u32|u64|usize)".}
 
-proc high*[T: u32|u64|usize](x: typedesc[T]): T =
+proc high*[T: u32|u64|usize](PT: typedesc[T]): T =
    when size_of(T) == 8:
       result = cast[T](-1'i64)
    elif size_of(T) == 4:
@@ -55,13 +43,16 @@ proc high*[T: u32|u64|usize](x: typedesc[T]): T =
    else:
       {.error: "unsupported bitsize for high(u32|u64|usize)".}
 
-proc bit_cast*[From, To](x: From, T: typedesc[To]): T {.inline.} =
-   result = cast[T](x)
+proc bit_cast*[From, To](x: From, PTo: typedesc[To]): To {.inline.} =
+   result = cast[To](x)
 
-proc bit_size_of*(T: typedesc): isize {.inline.} =
+proc bit_size_of*[T](PT: typedesc[T]): isize {.inline.} =
    result = size_of(T) * 8
 
-proc `&`*[I0: static isize, I1: static isize, T](
+proc `&`*[
+      I0: static isize,
+      I1: static isize,
+      T](
       a: array[I0, T],
       b: array[I1, T]
       ): array[I0 + I1, T] =

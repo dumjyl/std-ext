@@ -42,11 +42,17 @@ proc write*[T](f: FileEx, data: T) =
       IOError.throw("failed to write " & $T & " of " & $size_of(T) & " bytes" &
                     ", " & $n_bytes_written & " bytes written")
 
-proc read_as*[T](f: FileEx, _: typedesc[T]): T =
+proc read*[T](f: FileEx, _: typedesc[T]): T =
    let n_bytes_read = f.impl.read_buffer(addr result, size_of(T))
    if unlikely(n_bytes_read != size_of(T)):
       IOError.throw("reading as " & $T & " failed. read " & $n_bytes_read &
                     " bytes, expected " & $size_of(T))
+
+proc read*[T](f: FileEx, PT: typedesc[T], n: isize): T =
+   let n_bytes_read = f.impl.read_buffer(addr result, size_of(T) * n)
+   if unlikely(n_bytes_read != size_of(T) * n):
+      IOError.throw("reading as " & $n & " " & $T & " failed. read " &
+                    $n_bytes_read & " bytes, expected " & $size_of(T) * n)
 
 proc read*[T](f: FileEx, data: ptr T, n: isize) =
    let n_bytes_read = f.impl.read_buffer(data, n * size_of(T))
@@ -65,12 +71,12 @@ proc read*(f: FileEx, data: pointer, n_bytes: isize) =
 
 # --- total read ---
 
-proc read_file_as*[T: string](file_path: string, _: typedesc[T]): T =
+proc read_file*[T: string](file_path: string, PT: typedesc[T]): T =
    var f = FileEx.init(file_path)
    result = string.init(f.len)
    f.read(result.mem, result.len)
 
-proc read_file_as*[T](file_path: string, _: typedesc[seq[T]]): seq[T] =
+proc read_file*[T](file_path: string, PT: typedesc[seq[T]]): seq[T] =
    var f = FileEx.init(file_path)
    if f.len mod size_of(T) != 0 and f.len > 0:
       IOError.throw("file len not divisible by size_of(T)")

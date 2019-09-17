@@ -35,13 +35,13 @@ macro gen_op(
             if is_array:
                gnrcs.add(gen_def_typ(id"N", gen_gnrc(id"static", id"isize")))
             var a_elem_typ = TA
-            if TA.typ[1].typ_kind == nty_or:
+            if TA.typ.typ_kind == nty_or:
                gnrcs.add(gen_def_typ(id"T0", TA))
                a_elem_typ = id"T0"
             var b_elem_typ = TB
-            if `type==`(TB.typ[1], None): b_elem_typ = a_elem_typ
+            if `type==`(TB.typ, None): b_elem_typ = a_elem_typ
             var ret_typ = TY
-            if `type==`(TY.typ[1], None): ret_typ = a_elem_typ
+            if `type==`(TY.typ, None): ret_typ = a_elem_typ
             ret_typ = if is_array: gen_gnrc(id"array", id"N", ret_typ)
                       else: gen_gnrc(id"seq", ret_typ)
             template arg_typ(x: untyped) =

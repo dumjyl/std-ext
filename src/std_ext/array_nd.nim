@@ -32,7 +32,7 @@ static: do_assert(size_of(Array[f32, 4]) <= 64)
 proc init*[N: static isize](
       shape: array[N, isize]
       ): ArrayMetadata[N] {.attach.} =
-   when low(ValidDims) < N or N > high(ValidDims):
+   when low(ValidDims) > N or N > high(ValidDims):
       {.error: "invalid dimensionality: " & $N.}
    var len = 0
    for i in rev(span(shape)):
@@ -182,7 +182,7 @@ proc get_val(T: Node, ast_val: Node): Opt[Node] =
    if `id==`(ast_val, bind_sym"skip"):
       result = Node.none()
    # int lits are implicitly convertible
-   elif ast_val.kind == nnk_int_lit or `type==`(T.typ[1], ast_val):
+   elif ast_val.kind == nnk_int_lit or `type==`(T.typ, ast_val):
       result = Node.some(ast_val)
    else:
       error(&"invalid value type <{repr(ast_val.typ)}> for `{repr(ast_val)}`",
@@ -213,7 +213,7 @@ macro impl_index(
 
    if y_shape.len > 0:
       assert(false, "only integer indexing supported")
-      var y_sym = gen_sym(nsk_var, "y")
+      var y_sym = nsk_var.init("y")
       var y_typ = nnk_bracket_expr.init(id"Array", T, gen_lit(y_shape.len))
       result.add(gen_var_val(y_sym, gen_call("init", y_typ, y_shape)))
       var index_expr = gen_call("unsafe_data", x_sym).gen_index()
@@ -243,17 +243,16 @@ macro impl_index(
       var data_expr = gen_call("unsafe_data", x_sym).gen_index(idx_expr)
       result.add(if opt_val ?= val: gen_asgn(data_expr, val) else: data_expr)
    result = gen_block(result)
-   # echo repr result
 
 template `[]`*[T; N: static isize](
       x: Array[T, N],
       idxs: varargs[typed],
       ): untyped =
-   impl_index(x, x.T, x.N, idxs, skip)
+   impl_index(x, x.T, N, idxs, skip)
 
 template `[]=`*[T; N: static isize](
       x: Array[T, N],
       idxs: varargs[typed],
       val: typed,
       ): untyped =
-   impl_index(x, x.T, x.N, idxs, val)
+   impl_index(x, x.T, N, idxs, val)

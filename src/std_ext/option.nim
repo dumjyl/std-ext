@@ -148,7 +148,7 @@ proc `$`*[T, E](res: Res[T, E]): string =
       result = "error(" & $res.unsafe_err() & ")"
 
 macro unpack*(res: Res, branches: varargs[untyped]): untyped =
-   let tmp_sym = gen_sym(nsk_var, "res_tmp")
+   let tmp_sym = nsk_var.init("res_tmp")
    branches.needs_kind(nnk_arg_list)
    branches.needs_len(2)
    var if_branches: seq[Node]
@@ -170,3 +170,6 @@ macro unpack*(res: Res, branches: varargs[untyped]): untyped =
                branch[1])))
    result = stmt_concat(gen_var_val(tmp_sym, res),
                         nnk_if_stmt.init(if_branches))
+
+proc or_val*[T](opt: Opt[T], fallback_val: T): T =
+   result = if opt ?= val: val else: fallback_val

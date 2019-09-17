@@ -6,12 +6,13 @@ type
       str: string
       i32: int32
       val: T
+   TInitOther[T] = ref object
+      str: string
+      i32: int32
+      val: T
+   R = range[43'u8..200'u8]
 
-proc init*[T](str: string, i32: int32, val: T): TInit[T] {.attach.} =
-   result = Self[T](str: str, i32: i32, val: val)
-
-proc t_seq: seq[int] =
-   result.init(5)
+proc init*[T](str: string, i32: int32, val: T): TInit[T] {.attach, auto_init.}
 
 main_proc:
    block_of assert:
@@ -22,4 +23,10 @@ main_proc:
       seq[int].init(5).len == 5
       string.of_cap(5).len == 0
       seq[int].of_cap(5).len == 0
-      t_seq().len == 5
+   block:
+      let x = array[10, R].init()
+      assert(x[^1] == 43)
+   block:
+      let x = TInitOther[int32].init_from(TInit.init("123", 4'i32, ['a', 'b']))
+      assert(x.str == "123")
+      assert(x.i32 == 4'i32)

@@ -11,12 +11,12 @@ proc `^`*[T: SomeNumber](x: T, y: Natural): T =
    of 2: result = x * x
    of 3: result = x * x * x
    else:
-     var (x, y) = (x, y)
-     result = 1
-     while true:
-       if (y and 1) != 0:
-         result *= x
-       y = y shr 1
-       if y == 0:
-         break
-       x *= x
+      var (x, y) = (x, y)
+      result = 1
+      while true:
+         if (y and 1) != 0:
+            result *= x
+         y = y shr 1
+         if y == 0:
+            break
+         x *= x

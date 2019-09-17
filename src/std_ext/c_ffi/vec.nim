@@ -7,8 +7,8 @@ const
 type
    cpp_vector*[T] {.import_cpp: "std::vector<'0>", header: H.} = object
 
-proc init_impl[T](TInner: typedesc[T]): cpp_vector[T]
-   {.attach, import_cpp: "std::vector<'2>()", constructor, header: H.}
+proc init_impl[T](TInner: typedesc[T]): cpp_vector[T] {.attach,
+   import_cpp: "std::vector<'2>()", constructor, header: H.}
 
 proc init*[T]: cpp_vector[T] {.attach.} =
    result = cpp_vector[T].init_impl(T)

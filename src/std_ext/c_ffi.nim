@@ -40,12 +40,12 @@ macro ptr_tmps*(call: untyped): untyped =
    var set_locs: seq[Node]
    for i in span(call):
       if call[i].kind == nnk_infix and `id==`(call[i][0], ":="):
-         let sym = gen_sym(nsk_var, "ptr_tmp" & $tmp_vars.len)
+         let sym = nsk_var.init("ptr_tmp" & $tmp_vars.len)
          tmp_vars.add(gen_def_typ(sym, call[i][1]))
          set_locs.add(gen_asgn(call[i][2],
                                gen_call(gen_call("type_of", call[i][2]), sym)))
          call[i] = nnk_addr.init(sym)
-   let call_tmp_sym = gen_sym(nsk_var, "call_tmp")
+   let call_tmp_sym = nsk_var.init("call_tmp")
    result = gen_block(
       nnk_stmt_list.init(
          @[nnk_var_section.init(tmp_vars & gen_def_val(call_tmp_sym, call))] &
