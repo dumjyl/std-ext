@@ -40,7 +40,7 @@ proc init_from*[
       TFrom: object|ref object|tuple](
       PTInit: typedesc[TInto],
       from_val: TFrom,
-      ): TInto =
+      ): TInto {.inline.} =
    mixin init
    result = init(TInto)
    impl_init_from(TInto, TFrom, result, from_val)
@@ -49,7 +49,7 @@ proc init_from*[
       TInto: object|ref object|tuple,
       TFrom: object|ref object|tuple](
       into_val: var TInto,
-      from_val: TFrom) =
+      from_val: TFrom) {.inline.} =
    mixin init
    into_val = init(TInto)
    impl_init_from(TInto, TFrom, into_val, from_val)
@@ -83,7 +83,15 @@ proc init_ptr*[T](val: T): ptr T {.attach: T, inline.} =
    result = create(T)
    result[] = val
 
-macro init_ref*(T: typedesc[object], args: varargs[typed]): ref {.inline.} =
+proc init_ref*[T](val: T): ref T {.inline.} =
+   result = new(T)
+   result[] = val
+
+proc init_ptr*[T](val: T): ptr T {.inline.} =
+   result = create(T)
+   result[] = val
+
+macro init_ref*(T: typedesc[object], args: varargs[untyped]): ref {.inline.} =
    let sym = nsk_var.init("x")
    result = gen_stmts(gen_var_val(sym, "new".gen_call(T)))
    var call = "init".gen_call(T)
@@ -131,3 +139,10 @@ proc init*[T](len: Natural = 0.Natural): seq[T] {.attach, inline.} =
 
 proc of_cap*[T](cap: Natural): seq[T] {.attach, inline.} =
    result = new_seq_of_cap[T](cap)
+
+proc init*(str: string): c_string {.attach.} =
+   ## Allocates a ``c_string`` with the contents of ``str``.
+   result = cast[c_string](alloc(str.len + 1))
+   for i, c in str:
+      result[i] = c
+   result[str.len] = char(0)

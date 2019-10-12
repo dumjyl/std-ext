@@ -1,6 +1,6 @@
 import
    std_ext/private/std_ext/[iterators, types, attachs, initializers, meta, mem,
-                            dollars, errors, type_traits, modes, c_strs]
+                            dollars, errors, modes, c_strs]
 
 export
    iterators,
@@ -11,7 +11,6 @@ export
    mem,
    dollars,
    errors,
-   type_traits,
    modes,
    c_strs
 
@@ -49,6 +48,9 @@ proc bit_cast*[From, To](x: From, PTo: typedesc[To]): To {.inline.} =
 proc bit_size_of*[T](PT: typedesc[T]): isize {.inline.} =
    result = size_of(T) * 8
 
+proc bit_size_of*[T](x: T): isize {.inline.} =
+   result = size_of(x) * 8
+
 proc `&`*[
       I0: static isize,
       I1: static isize,
@@ -70,3 +72,19 @@ proc `&`*[I: static isize, T](a: T, b: array[I, T]): array[I + 1, T] =
    result[0] = a
    for i in span(I):
       result[1+i] = b[i]
+
+template static_assert*(cond: untyped, msg = "") =
+   static: do_assert(cond, msg)
+
+template deref*[T](x: ptr T): var T =
+   x[]
+
+template deref*[T](x: ref T): var T =
+   x[]
+
+template type_of_or_void*(expr: untyped): typedesc =
+   ## Return the type of ``expr`` or ``void`` on error.
+   when compiles(type_of(expr)):
+      type_of(expr)
+   else:
+      void

@@ -23,7 +23,6 @@ iterator combinations*(T: typedesc[enum], n: int): seq[T] {.inline.} =
                counters[j] = low(T)
             break
 
-   # = seq[T].init()
 proc combinations*(T: typedesc[enum], n: int): seq[seq[T]] =
    for combo in T.combinations(n):
       result.add(combo)

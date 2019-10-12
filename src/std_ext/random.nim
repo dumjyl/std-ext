@@ -4,8 +4,6 @@ import
 
 ## https://en.cppreference.com/w/cpp/header/random
 
-set_cpp_std(cpp_std11)
-
 const
    H = "<random>"
 
@@ -39,16 +37,16 @@ type
    Ranlux48Base*
       {.import_cpp: "std::ranlux48_base",
          header: H.} = distinct SubtractWithCarryEngine
-   Ranlux24*{.import_cpp: "std::ranlux24",
-               header: H.} = distinct DiscardBlockEngine
-   Ranlux48*{.import_cpp: "std::ranlux48",
-               header: H.} = distinct DiscardBlockEngine
+   Ranlux24*
+      {.import_cpp: "std::ranlux24", header: H.} = distinct DiscardBlockEngine
+   Ranlux48*
+      {.import_cpp: "std::ranlux48", header: H.} = distinct DiscardBlockEngine
    KnuthB*
       {.import_cpp: "std::knuth_b", header: H.} = distinct ShuffleOrderEngine
    DefaultRandomEngine*
       {.import_cpp: "std::default_random_engine", header: H.} = MinstdRand0
-   RandomDevice*{.import_cpp: "std::random_device", header: H.} = object
-   SeedSeq*{.import_cpp: "std::seed_seq", header: H.} = object
+   RandomDevice* {.import_cpp: "std::random_device", header: H.} = object
+   SeedSeq* {.import_cpp: "std::seed_seq", header: H.} = object
    UniformIntDist*[T: SomeInteger]
       {.import_cpp: "std::uniform_int_distribution<'0>", header: H.} = object
    UniformRealDist*[T: SomeFloat]
@@ -100,11 +98,11 @@ template templ_engine(
       cpp_name: static string,
       BaseT: typedesc) =
    proc init*(value: ResultT): EngineT
-      {.attach, import_cpp: "std::" & cpp_name & "(##)", constructor,
+      {.attach, import_cpp: "std::" & cpp_name & "(@)", constructor,
         header: H.}
 
    proc seed*(self: EngineT; value: ResultT)
-      {.import_cpp: "#.seed(#)", header: H.}
+      {.import_cpp: "#.seed(@)", header: H.}
 
    when BaseT isnot void:
       proc base*(self: EngineT): var BaseT
@@ -114,7 +112,7 @@ template templ_engine(
       {.import_cpp: "#()", header: H.}
 
    proc discards*(self: EngineT; z: culonglong)
-      {.import_cpp: "#.discard(#)", header: H.}
+      {.import_cpp: "#.discard(@)", header: H.}
 
    proc min*(self: typedesc[EngineT]): ResultT
       {.import_cpp: "std::" & cpp_name & "::min()", header: H.}
@@ -151,20 +149,19 @@ proc entropy*(self: RandomDevice): c_double
 
 # --- UniformInt ---
 
-proc init*[T: SomeInteger](a: T, b: T): UniformIntDist[T]
-   {.attach, import_cpp: "std::uniform_int_distribution<'2>(##, #)", header: H.}
+proc init*[T: SomeInteger](a: T, b: T): UniformIntDist[T] {.attach,
+   import_cpp: "std::uniform_int_distribution<'*0>(@)", header: H.}
 
 proc sample*[T: SomeInteger; G](self: UniformIntDist[T], gen: var G): T
-   {.import_cpp: "#(#)", header: H.}
+   {.import_cpp: "#(@)", header: H.}
 
 # --- UniformReal ---
 
-proc init*[T: SomeFloat](a: T, b: T): UniformRealDist[T]
-   {.attach, import_cpp: "std::uniform_real_distribution<'2>(##, #)",
-     header: H.}
+proc init*[T: SomeFloat](a: T, b: T): UniformRealDist[T] {.attach,
+   import_cpp: "std::uniform_real_distribution<'*0>(@)", header: H.}
 
 proc sample*[T: SomeFloat; G](self: UniformRealDist[T], gen: var G): T
-   {.import_cpp: "#(#)", header: H.}
+   {.import_cpp: "#(@)", header: H.}
 
 # --- Uniform ---
 
@@ -187,10 +184,10 @@ proc sample*[T: SomeNumber; G](self: Uniform[T], gen: var G): T =
 # --- Normal ---
 
 proc init*[T: SomeFloat](mean: T, std_dev: T): NormalDist[T]
-   {.attach, import_cpp: "std::normal_distribution<'2>(##, #)", header: H.}
+   {.attach, import_cpp: "std::normal_distribution<'*0>(@)", header: H.}
 
 proc sample*[T: SomeFloat; G](self: NormalDist[T], gen: G): T
-   {.import_cpp: "#(#)", header: H.}
+   {.import_cpp: "#(@)", header: H.}
 
 # --- helpers ---
 

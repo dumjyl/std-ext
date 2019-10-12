@@ -7,6 +7,8 @@ type
       cpp_std_gnu03
       cpp_std11
       cpp_std_gnu11
+      cpp_std14
+      cpp_std_gnu14
       cpp_std17
       cpp_std_gnu17
       cpp_std20
@@ -31,6 +33,7 @@ template set_cpp_std*(std: static CppStd = cpp_std11) =
       {.error: "module only supports c++ backend".}
    {.pass_c: "-std=" & [cpp_std03: "c++03", cpp_std_gnu03: "gnu++03",
                         cpp_std11: "c++11", cpp_std_gnu11: "gnu++11",
+                        cpp_std14: "c++14", cpp_std_gnu14: "gnu++14",
                         cpp_std17: "c++17", cpp_std_gnu17: "gnu++17",
                         cpp_std20: "c++2a", cpp_std_gnu20: "gnu++2a"][std].}
 

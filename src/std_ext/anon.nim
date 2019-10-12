@@ -10,7 +10,7 @@ type
 
 const
    _* = Anonymous()
-   fieldLookup = CacheTable"stdext/anon.fieldLookup"
+   field_lookup = CacheTable"stdext/anon.field_lookup"
 
 macro `enum`*(fields: varargs[untyped]): untyped =
    var name = "Enum"
@@ -26,7 +26,7 @@ macro `enum`*(fields: varargs[untyped]): untyped =
       id(name))
    for f in fields:
       if public:
-         fieldLookup[no_style(f.str)] = result
+         field_lookup[no_style(f.str)] = result
 
 proc find_enum_type(field_str: string): Node =
    for field, enum_type in field_lookup:

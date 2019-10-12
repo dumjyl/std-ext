@@ -1,7 +1,6 @@
-include system/[fatal, indexerrors]
-
 import
-   ../std_ext
+   ../std_ext,
+   ./checks
 
 # type
 #    Vec*[T] = object
@@ -11,11 +10,6 @@ import
 #       len, cap: isize
 #       data: ptr UncheckedArray[T]
 #       small_data: array[N, T]
-
-proc check_bounds(i: isize, len: isize) =
-   when compile_option("bound_checks"):
-      if i < 0 or i >= len:
-         sys_fatal(IndexError, format_error_index_bound(i, len-1))
 
 type
    FixedVec*[N: static isize; T] = object

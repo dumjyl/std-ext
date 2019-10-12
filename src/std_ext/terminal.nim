@@ -14,16 +14,13 @@ template with_foreground_color(
    stdout.set_foreground_color(fg_default)
 
 template echo_bad*(args: varargs[untyped]) =
-   with_foreground_color(fg_red):
-      echo("▲ ", args, " ▲")
+   styled_echo(fg_red, "▲ ", args, " ▲")
 
 template echo_warn*(args: varargs[untyped]) =
-   with_foreground_color(fg_yellow):
-      echo("◆ ", args, " ◆")
+   styled_echo(fg_yellow, "◆ ", args, " ◆")
 
 template echo_good*(args: varargs[untyped]) =
-   with_foreground_color(fg_cyan):
-      echo("● ", args, " ●")
+   styled_echo(fg_cyan, "● ", args, " ●")
 
 template quit_bad*(args: varargs[untyped]) =
    echo_bad(args)

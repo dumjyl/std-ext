@@ -111,6 +111,15 @@ proc skip*(n: Node, kinds: TypeKinds, pos: int|BackwardsIndex = ^1): Node =
    while result.len != 0 and result.typ_kind in kinds:
       result = result[pos]
 
+proc get_typ*[T](PT: typedesc[T]): Node =
+   result = get_type(T)
+
+proc get_typ_impl*[T](PT: typedesc[T]): Node =
+   result = get_type_impl(T)
+
+proc get_typ_inst*[T](PT: typedesc[T]): Node =
+   result = get_type_inst(T)
+
 proc typ*(n: Node, skip_typedesc = true): Node =
    result = get_type(n)
    if skip_typedesc:
@@ -164,19 +173,23 @@ proc needs_len*(n: Node, len: int) =
    if n.len != len:
       error(&"bad node len. needs<{len}> got<{n.len}>\n{n}", n)
 
-proc needs_kind*(n: Node; kind: NodeKind) =
+proc needs_len*(n: Node, len: Slice[int]) =
+   if n.len notin len:
+      error(&"bad node len. needs<{len.a} .. {len.b}> got<{n.len}>\n{n}", n)
+
+proc needs_kind*(n: Node, kind: NodeKind) =
    if n.kind != kind:
       error(&"bad node kind. needs<{kind}> got<{n.kind}>\n{n}", n)
 
-proc needs_kind*(n: Node; kinds: set[NodeKind]) =
+proc needs_kind*(n: Node, kinds: set[NodeKind]) =
    if n.kind notin kinds:
       error(&"bad node kind. needs<{kinds}> got<{n.kind}>\n{n}", n)
 
-proc needs_kind*(n: Node; kind: TypeKind) =
+proc needs_kind*(n: Node, kind: TypeKind) =
    if n.typ_kind != kind:
       error(&"bad node type kind. needs<{kind}> got<{n.typeKind}>\n{n}", n)
 
-proc needs_id*(n: Node; idents: varargs[string]) =
+proc needs_id*(n: Node, idents: varargs[string]) =
    n.needs_kind(nnk_ident)
    for ident in idents:
       if `id==`(n, ident):
@@ -204,11 +217,8 @@ proc gen_def_val*(name: Node, val: Node): Node =
 proc gen_def_typ*(name: Node, typ: Node): Node =
    result = nnk_ident_defs.tree(name, typ, empty)
 
-proc gen_lit*(val: string): Node =
-   result = nnk_str_lit.node(val)
-
-proc gen_lit*(val: int): Node =
-   result = nnk_int_lit.node(val)
+proc gen_lit*[T](val: T): Node =
+   result = new_lit(val)
 
 proc call_stmt_field*(n: Node): tuple[lhs: Node, rhs: Node] =
    n.needs_kind(nnk_ident)
@@ -310,8 +320,11 @@ proc unalias*(stmts: Node, expr: Node, name: string): Node =
 proc gen_stmts*(stmts: varargs[Node]): Node =
    result = nnk_stmt_list.init(stmts)
 
-proc gen_block*(n: Node): Node =
-   result = nnk_block_stmt.init(empty, n)
+proc gen_block*(n: varargs[Node]): Node =
+   result = nnk_block_stmt.init(empty, gen_stmts(n))
+
+proc gen_block*(n: openarray[Node], label: Node = empty): Node =
+   result = nnk_block_stmt.init(label, gen_stmts(n))
 
 proc gen_proc*(
       name: Node,
@@ -327,12 +340,12 @@ proc gen_proc*(
       empty,
       nnk_generic_params.init(gnrcs),
       nnk_formal_params.init(ret & @frmls),
-      if prgms.len > 1: nnk_pragma.init(prgms) else: empty,
+      if prgms.len > 0: nnk_pragma.init(prgms) else: empty,
       empty,
       stmts)
 
-proc gen_gnrc*(args: varargs[Node]): Node =
-   result = nnk_bracket_expr.init(args)
+proc gen_gnrc*(ns: varargs[Node]): Node =
+   result = nnk_bracket_expr.init(ns)
 
 proc generic_params*(fn: Node): Node =
    fn.needs_kind(RoutineNodes)
@@ -342,13 +355,18 @@ proc `generic_params=`*(fn: Node, params: Node) =
    fn.needs_kind(RoutineNodes)
    fn[2] = params
 
-proc def_syms*(ident_def: Node): seq[Node] =
-   ident_def.needs_kind(nnk_ident_defs)
-   for i in 0 ..< ident_def.len - 2:
-      result.add(ident_def[i])
+proc def_syms*(n: Node): seq[Node] =
+   case n.kind:
+   of nnk_formal_params:
+      for param in n[1 .. ^1]:
+         result.add(def_syms(param))
+   of nnk_ident_defs:
+      for i in 0 ..< n.len - 2:
+         result.add(n[i])
+   else: error("unhandled kind: " & $n)
 
 iterator field_syms*(n: Node): Node =
-   ## case objects currently unsupported.
+   ## Case objects currently unsupported.
    let n = n.skip({nnk_type_def, nnk_object_ty, nnk_ref_ty, nnk_ptr_ty})
    n.needs_kind(nnk_rec_list)
    for f in n:
@@ -361,3 +379,26 @@ proc gen_constr*(typ: Node, inits: varargs[Node]): Node =
 
 proc record_impl*(n: Node): Node =
    result = n.typ_inst.skip(nnk_bracket_expr, pos = 0).impl
+
+proc gen_par*(ns: varargs[Node]): Node =
+   result = nnk_par.init(ns)
+
+proc gen_range_typ*[T: SomeNumber](rng: Slice[T]): Node =
+   result = gen_gnrc(id"range", infix(gen_lit(rng.a), "..", gen_lit(rng.b)))
+
+proc gen_array_typ*(idx: Node, typ: Node): Node =
+   result = gen_gnrc(id"array", idx, typ)
+
+proc gen_array_typ*(len: int, typ: Node): Node =
+   result = gen_array_typ(gen_lit(len), typ)
+
+template bind_call*(ident: string, args: varargs[Node]): Node =
+   gen_call(bind_sym(ident)).add(args)
+
+template exec_macro*(stmts: untyped): untyped =
+   import std_ext/macros
+   macro exec_impl: untyped {.gen_sym.} =
+      stmts
+   exec_impl()
+
+

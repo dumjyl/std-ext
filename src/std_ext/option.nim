@@ -32,6 +32,9 @@ proc init*[T](val: sink T): Opt[T] {.attach.} =
 proc some*[T](val: T): Opt[T] {.attach: T, inline.} =
    result = Opt[T].init(val)
 
+proc some*[T](val: T): Opt[T] {.inline.} =
+   result = Opt[T].init(val)
+
 proc none*[T](): Opt[T] {.attach: T, inline.} =
    result = default(Opt[T])
 

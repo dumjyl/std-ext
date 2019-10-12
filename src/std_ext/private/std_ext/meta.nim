@@ -30,6 +30,34 @@ templ_unroll(static isize, isize, 0 ..< xs)
 templ_unroll(static openarray[isize], isize, xs)
 templ_unroll(static openarray[string], string, xs)
 templ_unroll(openarray[typedesc], NimNode, xs)
+templ_unroll(untyped, NimNode, xs)
+
+macro make_call*(call: untyped, args: varargs[untyped]): untyped =
+   result = gen_call(call)
+   for arg in args:
+      if arg.kind == nnk_arg_list:
+         for splat_arg in arg:
+            result.add(splat_arg)
+      elif arg.kind == nnk_call and `id==`(arg[0], "splat"):
+         for splat_arg in arg[1]:
+            result.add(splat_arg)
+      else:
+         result.add(arg)
+
+macro concat_args*(
+      arg_a: typed,
+      arg_b: typed,
+      kind: static[NodeKind] = nnk_arg_list
+      ): untyped =
+   result = kind.init()
+   template impls(args: untyped) =
+      if args.kind in {nnk_bracket, nnk_arg_list}:
+         for arg in args:
+            result.add(arg)
+      else:
+         result.add(args)
+   impls(arg_a)
+   impls(arg_b)
 
 macro block_of*(op, stmts: untyped): untyped =
    stmts.needs_kind(nnk_stmt_list)
@@ -46,8 +74,10 @@ macro visits*(entry: untyped, stmts: untyped): untyped =
    let init = entry[2]
    result = quote do:
       var `to_visit_id` = @[`init`]
-      template visit(elem) =
+      template visit(elem: type_of(`init`)) =
          `to_visit_id`.add(elem)
+      template visit(elems: varargs[type_of(`init`)]) =
+         `to_visit_id`.add(elems)
       while `to_visit_id`.len() > 0:
          var `cur_id` = `to_visit_id`.pop()
          `stmts`

@@ -9,7 +9,7 @@ template init*[T: Exception](Self: typedesc[T], message: string,
 
 template throw*[T: Exception](Self: typedesc[T], message: string,
                               parent_exception: ref Exception = nil) =
-   raise Self.init(message, parent_exception)
+   raise (ref Self)(msg: message, parent: parent_exception)
 
 template failure*(msgs: openarray[string]) =
    write_stack_trace()

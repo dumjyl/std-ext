@@ -4,7 +4,16 @@ import
    std/[osproc, streams]
 
 export
-   ProcessOption
+   osproc,
+   streams
+
+proc init*(
+      command: string,
+      args: openarray[string] = [],
+      options: set[ProcessOption] = {po_stderr_to_stdout, po_use_path},
+      working_dir: string = "",
+      ): Process {.attach, inline.} =
+   result = start_Process(command, working_dir, args, nil, options)
 
 proc exec*(
       command: string,
@@ -12,8 +21,7 @@ proc exec*(
       options = {po_stderr_to_stdout, po_use_path},
       working_dir = ""
       ): tuple[output: string, code: int] =
-   var p = start_process(command, working_dir = working_dir, args = args,
-                         options = options)
+   var p = Process.init(command, args, options, working_dir)
    var outp = p.output_stream()
    var line = string.of_cap(120)
    while true:
