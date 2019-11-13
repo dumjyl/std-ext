@@ -1,5 +1,6 @@
 import
    ../std_ext,
+   ./c_ffi/str,
    system/io as sys_io
 
 type
@@ -82,3 +83,8 @@ proc read_file*[T](file_path: string, PT: typedesc[seq[T]]): seq[T] =
       IOError.throw("file len not divisible by size_of(T)")
    result = seq[T].init(f.len div size_of(T))
    f.read(result.mem, result.len)
+
+proc read_file*[T: cpp_string](file_path: string, PT: typedesc[T]): T =
+  var f = FileEx.init(file_path)
+  result = cpp_string.init(f.len.isize, '\0')
+  f.read(result.mem, result.len)

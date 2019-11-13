@@ -363,25 +363,6 @@ proc init*(): TensorReprOptions {.attach.} =
 
 var repr_options* = TensorReprOptions.init()
 
-proc repr_impl[
-      N: NI,
-      T](
-      self: Tensor[N, T],
-      options: TensorReprOptions) =
-   var strs = seq[string].init(self.shape(2) * self.shape(3))
-   var str: string
-   for i2 in self.shape(2):
-      str &= "|"
-      for i3 in self.shape(3):
-         strs[i2 * self.shape(3) + i3].format_value(self[0, 0, i2, i3], "5")
-         str.format_value(self[0, 0, i2, i3], "5")
-      str &= "|\n"
-   template horiz: string = '|' & "-".repeat(str.find("\n") - 2) & "|\n"
-   echo horiz & str & horiz
-   # echo "-".repeat(6 * self.shape(3) - 1)
-   # for i2 in self.shape(2):
-
-   # echo "|\n".repeat(self.shape(2))
-
 proc `$`*[N: NI, T](self: Tensor[N, T], options = repr_options): string =
-   repr_impl(self, options)
+   var strs = seq[string].init()
+   

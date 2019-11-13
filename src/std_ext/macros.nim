@@ -84,6 +84,9 @@ proc gen_type_def*(name: Node, def: Node): Node =
             empty,
             def))
 
+proc gen_typ_def*(name: Node, def: Node): Node =
+  result = gen_type_def(name, def)
+
 proc sons*(n: Node): seq[Node] =
    for son in n:
       result.add(son)
@@ -395,10 +398,48 @@ proc gen_array_typ*(len: int, typ: Node): Node =
 template bind_call*(ident: string, args: varargs[Node]): Node =
    gen_call(bind_sym(ident)).add(args)
 
-template exec_macro*(stmts: untyped): untyped =
-   import std_ext/macros
-   macro exec_impl: untyped {.gen_sym.} =
+template gen*(stmts: untyped): untyped =
+   macro impl_gen: untyped {.gen_sym.} =
       stmts
-   exec_impl()
+   impl_gen()
 
+template exec_macro(stmts: untyped): untyped {.deprecated.} =
+  gen(stmts)
 
+type
+  FieldDesc* = tuple
+    name: string
+    typ: Node
+
+iterator field_descs*(T: typedesc): FieldDesc =
+  ## Case objects unsupported.
+  let typ = get_typ_impl(T)
+  typ.needs_kind(nnk_object_ty)
+  typ[2].needs_kind(nnk_rec_list)
+  for f in typ[2]:
+    f.needs_kind(nnk_ident_defs)
+    yield (f[0].str_val, f[1])
+
+proc gen_obj_ty*(
+    fields: openarray[Node],
+    pragmas: openarray[Node] = []
+    ): Node = 
+  result = nnk_object_ty.init()
+  if pragmas.len > 0:
+    result.add(nnk_pragma.init())
+    result[0].add(pragmas)
+  else:
+    result.add(empty)
+  result.add(empty)
+  result.add(nnk_rec_list.init())
+  result[2].add(fields)
+
+proc delete*(self: Node, i: int, n = 0) =
+  self.del(i, n)
+
+proc set_len*(self: Node, len: int) =
+  if len > self.len:
+    for _ in 0 ..< len - self.len:
+      self.add(default(Node))
+  else:
+    self.delete(self.high, self.len - len)

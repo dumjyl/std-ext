@@ -35,3 +35,4 @@ main_proc:
       assert(x[1, 1, 1, 3] == 3 * 32 * 64 + 32 * 64 + 64 + 3)
    block:
       discard
+

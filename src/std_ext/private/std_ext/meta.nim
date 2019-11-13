@@ -1,5 +1,6 @@
 import
    ./types,
+   ./initializers,
    ../../macros
 
 proc impl_unroll[T](n: NimNode, x_sym: NimNode, x: T): NimNode =
@@ -81,3 +82,18 @@ macro visits*(entry: untyped, stmts: untyped): untyped =
       while `to_visit_id`.len() > 0:
          var `cur_id` = `to_visit_id`.pop()
          `stmts`
+
+macro fixup_varargs*(call: untyped): untyped =
+  call.needs_kind(nnk_call_kinds)
+  var args = seq[Node].init()
+  for arg in call:
+    if arg.kind == nnk_hidden_std_conv and arg.len == 2 and
+       arg[0].kind == nnk_empty and arg[1].kind == nnk_bracket:
+      for arg in arg[1]:
+        args.add(arg)
+    else:
+      args.add(arg)
+  call.set_len(0)
+  for arg in args:
+    call.add(arg)
+  result = call

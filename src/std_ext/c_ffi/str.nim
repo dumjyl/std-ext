@@ -63,6 +63,9 @@ proc `$`*(str: cpp_string): string {.inline.} =
    for c in str:
       result.add(c)
 
+proc mem*(self: var cpp_string): ptr char =
+  result = self[0].addr
+
 test_proc:
    var x = cpp_string.init()
    x.add('a')

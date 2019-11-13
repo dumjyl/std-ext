@@ -30,3 +30,13 @@ proc surround*(strs: openarray[string], lhs, rhs: string, join = ", "): string =
 
 proc surround*(str: string, lhs, rhs: string, join = ", "): string =
    result = [str].surround(lhs, rhs, join)
+
+proc ln*[T](self: var string, val: T) =
+  self &= $val & '\n'
+
+proc ln*(self: var string) =
+  self &= '\n'
+
+proc lns*[T](self: var string, vals: openarray[T]) =
+  for val in vals:
+    self.ln(val)

@@ -1,6 +1,15 @@
 import
-   std_ext/private/std_ext/[iterators, types, attachs, initializers, meta, mem,
-                            dollars, errors, modes, c_strs]
+   std_ext/private/std_ext/[iterators,
+                            types,
+                            attachs,
+                            initializers,
+                            meta,
+                            mem,
+                            dollars,
+                            errors,
+                            modes,
+                            c_strs,
+                            seq_ext]
 
 export
    iterators,
@@ -12,10 +21,17 @@ export
    dollars,
    errors,
    modes,
-   c_strs
+   c_strs,
+   seq_ext
 
-from sugar import dump
-export dump
+from sugar import
+   dump,
+   `=>`,
+   `->`
+export
+   dump,
+   `=>`,
+   `->`
 
 template loop*(label: untyped, stmts: untyped): untyped =
    block label:
@@ -88,3 +104,11 @@ template type_of_or_void*(expr: untyped): typedesc =
       type_of(expr)
    else:
       void
+
+from os import parent_dir
+
+template cur_src_dir*: untyped =
+  parent_dir(instantiation_info(-1, true).filename)
+
+template cur_src_file*: untyped =
+  instantiation_info(-1, true).filename

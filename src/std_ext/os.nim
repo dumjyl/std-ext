@@ -24,3 +24,11 @@ proc find_exe*(exe: string): Opt[string] =
       result = string.some(exe_path)
    else:
       result = string.none()
+
+proc is_dir*(path: string): bool {.inline.} =
+   result = dir_exists(path)
+
+proc is_file*(path: string): bool {.inline.} =
+   result = file_exists(path)
+
+

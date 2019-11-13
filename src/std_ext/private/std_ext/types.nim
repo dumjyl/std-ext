@@ -33,6 +33,8 @@ type
    NI* = static isize
    NF32* = static f32
    NF64* = static f64
+   c_usize {.import_c: "size_t".} = usize
+
 
 macro tupled*(T: typedesc, N: static int): typedesc =
    ## Create a tuple of type T with cardinality N.
