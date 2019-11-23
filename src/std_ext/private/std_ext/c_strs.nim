@@ -2,7 +2,19 @@ import
    ./types,
    ./attachs
 
-proc alloc*(strs: openarray[string]): c_string_array {.attach, inline.} =
+proc init*(str: string): c_string {.attach.} =
+   ## Allocates a `c_string` with the contents of `str`.
+   ##
+   ## This must be freed manually.
+   result = cast[c_string](alloc(str.len + 1))
+   for i, c in str:
+      result[i] = c
+   result[str.len] = char(0)
+
+proc init*(strs: openarray[string]): c_string_array {.attach, inline.} =
+   ## Allocates a `c_string_array` with the contents of `strs`.
+   ##
+   ## This must be freed manually with `free`.
    result = alloc_c_string_array(strs)
 
 proc free*(c_strs: c_string_array) =

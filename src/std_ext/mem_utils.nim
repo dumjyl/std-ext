@@ -8,33 +8,33 @@ export
    std_allocators
 
 proc offset_u8*(x: pointer, i: isize): pointer {.inline.} =
-   ## offset a ptr by ``i`` bytes
+   ## Return a `pointer` offset by ``i`` bytes.
    result = (x.bit_cast(isize) + i).bit_cast(pointer)
 
 proc offset*(x: pointer, i: isize): pointer {.inline.} =
-   ## offset a ptr by ``i`` bytes
+   ## Return a `pointer` offset by ``i`` bytes.
    result = x.offset_u8(i)
 
 proc offset_u8*[T](x: ptr T, i: isize): ptr T {.inline.} =
-   ## offset a ptr by ``i`` bytes
+   ## Return a `ptr T` offset by ``i`` bytes.
    result = (x.bit_cast(isize) + i).bit_cast(ptr T)
 
 proc offset*[T](x: ptr T, i: isize): ptr T {.inline.} =
-   ## offset a ptr by ``size_of(T)`` bytes
+   ## Return a `ptr T` offset by ``size_of(T)`` bytes.
    result = x.offset_u8(i * size_of(T))
 
 proc offset_u8*[T](
       x: ptr UncheckedArray[T],
       i: isize
       ): ptr UncheckedArray[T] {.inline.} =
-   ## offset a ptr by ``i`` bytes
+   ## Return a `ptr UnecheckedArray[T]` offset by ``i`` bytes.
    result = (x.bit_cast(isize) + i).bit_cast(ptr UncheckedArray[T])
 
 proc offset*[T](
       x: ptr UncheckedArray[T],
       i: isize
       ): ptr UncheckedArray[T] {.inline.} =
-   ## offset a ptr by ``size_of(T)`` bytes
+   ## Return a `ptr UnecheckedArray[T]` offset by ``size_of(T)`` bytes.
    result = x.offset_u8(i * size_of(T))
 
 proc alloc*(
@@ -42,12 +42,14 @@ proc alloc*(
       bytes: isize,
       alignment: isize = 8,
       ): pointer {.inline.} =
+   ## Allocate a pointer from an `Allocator`.
    result = allocator[].alloc(allocator, bytes, alignment)
 
 proc dealloc*(
       allocator: Allocator,
       allocation: pointer,
       bytes: isize = 0) {.inline.} =
+   ## Deallocate a pointer from an `Allocator`.
    allocator[].dealloc(allocator, allocation, bytes)
 
 proc realloc*(
@@ -56,6 +58,7 @@ proc realloc*(
       bytes_old: isize,
       bytes_new: isize,
       ): pointer {.inline.} =
+   ## Reallocate a pointer from an `Allocator`.
    result = allocator[].realloc(allocator, allocation, bytes_old, bytes_new)
 
 proc realloc*(
@@ -63,35 +66,41 @@ proc realloc*(
       allocation: pointer,
       bytes: isize,
       ): pointer {.inline.} =
+   ## Reallocate a pointer from an `Allocator`.
    result = realloc(allocator, allocation, 0, bytes)
 
 type
-   DecResultKind* = enum
+   DecResultKind* = enum ## If an reference count decrement freed a `RcData`.
       DecAlive
       DecFreed
-   RcData*[T] = ptr object
+   RcData*[T] = ptr object ## For implimenting reference counted objects.
       ref_count: isize
       len: isize
       allocator: Allocator
       data: UncheckedArray[T]
 
 proc len*[T](self: RcData[T]): isize =
+   ## Return the number of element the allocation holds.
    result = self.len
 
 proc low*[T](self: RcData[T]): isize =
+   ## Return the index of the first element.
    result = 0
 
 proc high*[T](self: RcData[T]): isize =
+   ## Return the index of the last element.
    result = self.len - 1
 
 template span*[T](self: RcData[T]): untyped =
    low(self) .. high(self)
 
 proc `[]`*[T](self: RcData[T], i: isize): var T =
+   ## Mutable indexer, bounds checked.
    check_bounds(i, self.len)
    result = self.data[i]
 
 proc `[]=`*[T](self: RcData[T], i: isize, val: T) =
+   ## Indexer, bounds checked.
    check_bounds(i, self.len)
    self.data[i] = val
 
@@ -108,6 +117,9 @@ proc init*[T](
       allocator = get_local_allocator(),
       zero_mem = true,
       ): RcData[T] {.attach.} =
+   ## Return an allocation for reference counted data structures.
+   ##
+   ## Use `inc_ref` and `dec_ref`, or `deinit` to manually free.
    let bytes = size_of(result[]) + size_of(T) * len
    result = alloc(allocator, bytes).bit_cast(RcData[T])
    if result == nil:
@@ -134,4 +146,5 @@ proc dec_ref*[T](self: RcData[T]): DecResultKind {.discardable.} =
       result = DecAlive
 
 template unsafe_set*[T0, T1](lhs: var T0, rhs: T1) =
+   ## Unsafe.
    lhs.addr.bit_cast(ptr T1).deref() = rhs

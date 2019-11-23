@@ -1,4 +1,4 @@
-version = "0.7.2"
+version = "0.8.0"
 author = "Jasper Jenkins"
 description = "stdlib extensions for nim for me"
 license = "MIT"
@@ -26,14 +26,10 @@ proc release_flag(name: string): string =
    else:
       result = ""
 
-const disabled = [
-   "array_nd.nim",
-   "tarray_nd.nim",
-   "vecs.nim",
-   "tvecs.nim"]
+const disabled = [""]
 
 task test, "run tests":
-   let src_files = (collect_files_rec("./src") & collect_files_rec("./tests"))
+   let src_files = (collect_files_rec("src") & collect_files_rec("tests"))
                     .filter_it(it.ends_with(".nim"))
    for src_file in src_files:
       if src_file.extract_filename notin disabled:
@@ -43,3 +39,10 @@ task test, "run tests":
          except:
             echo "failed processing: ", src_file
             raise
+
+task docs, "build docs":
+   var src_files: seq[string]
+   for dir in ["src", "src/std_ext", "src/std_ext/c_ffi"]:
+      src_files.add(collect_files_rec(dir).filter_it(it.ends_with(".nim")))
+   for src_file in src_files:
+      exec "nim doc --threads:on " & src_file

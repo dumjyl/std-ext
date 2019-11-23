@@ -15,20 +15,25 @@ type
       cpp_std_gnu20
 
 template include_path*(path: static string) =
+   ## Pass an include path to the compiler.
    {.pass_c: "-I" & path.}
 
 template link_path*(path: static string) =
+   ## Pass a link path to the linker
    {.pass_l: "-L" & path.}
 
 template link*(lib: static string) =
+   ## Link a library.
    {.pass_l: "-l" & lib.}
 
 macro link*(libs: static openarray[string]) =
+   ## Link multiple libraries.
    result = nnk_stmt_list.init()
    for lib in libs:
       result.add(gen_call("link", gen_lit(lib)))
 
 template set_cpp_std*(std: static CppStd = cpp_std11) =
+   ## Set the c++ standard.
    when not defined(cpp):
       {.error: "module only supports c++ backend".}
    {.pass_c: "-std=" & [cpp_std03: "c++03", cpp_std_gnu03: "gnu++03",
@@ -36,20 +41,3 @@ template set_cpp_std*(std: static CppStd = cpp_std11) =
                         cpp_std14: "c++14", cpp_std_gnu14: "gnu++14",
                         cpp_std17: "c++17", cpp_std_gnu17: "gnu++17",
                         cpp_std20: "c++2a", cpp_std_gnu20: "gnu++2a"][std].}
-
-template use_lib_cpp* =
-   {.pass_c: "-stdlib=libc++".}
-   {.pass_l: "-lc++".}
-   {.pass_l: "-lc++abi".}
-
-template local_include*(file: static string) =
-   {.emit: "/*INCLUDESECTION*/ #include \"" & file & "\"".}
-
-template sys_include*(file: static string) =
-   {.emit: "/*INCLUDESECTION*/ #include <" & file & ">".}
-
-template local_include_here*(file: static string) =
-   {.emit: "#include \"" & file & "\"".}
-
-template sys_include_here*(file: static string) =
-   {.emit: "#include <" & file & ">".}

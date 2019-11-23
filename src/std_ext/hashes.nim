@@ -1,7 +1,7 @@
 import
    ../std_ext,
    ./mem_utils,
-   ./bit_utils
+   std/bitops
 
 # port of seahash: https://gitlab.redox-os.org/redox-os/seahash
 
@@ -130,7 +130,7 @@ proc hash_buffer(x: openarray[u8],
    a = a.bit_xor(x.len.usize)
    result = diffuse(a)
 
-test:
+sec(test):
    proc read_int_ref(x: openarray[u8]): u64 =
       for i in countdown(x.high, 0):
          result = result shl 8
@@ -167,6 +167,8 @@ proc init*(k1 = 0xe7b0c93ca8525013'u64,
            k2 = 0x011d02b854ae8182'u64,
            k3 = 0x7bcc5cf9c39cec76'u64,
            k4 = 0xfa336285d102d083'u64): Hasher {.attach.} =
+   ## Initialize a `Hasher` with 4 keys. Hash primitive values and buffers of
+   ## primite values with the overloaded `mix` proc, then call `finish`.
    result = Hasher(state: bit_xor(k1, k3), k1: k1, k2: k2, k3: k3, k4: k4)
 
 proc mix(hasher: var Hasher, x: u64, k1: u64, k2: u64) =
@@ -223,14 +225,16 @@ template simple_hash(x: untyped): HashEx =
    hasher.finish()
 
 proc hash_ex*(x: string): HashEx =
+   ## Hash a `string`.
    result = simple_hash(x)
 
 proc hash_ex*(x: pointer): HashEx =
+   ## Hash a `pointer`.
    result = simple_hash(x)
 
 {.pop.}
 
-test:
+sec(test):
    proc b(s: string): seq[u8] =
       for i in span(s):
          result.add(s[i].u8)
@@ -323,7 +327,7 @@ test:
          hash_buffer(b"iiiiiiiijkjke") != hash_buffer(b"iiiiiiiijkjk")
          hash_buffer(b"ab") != hash_buffer(b"bb")
 
-test_proc:
+run(test):
    read_int_test()
    read_u64_test()
    diffuse_test(94203824938'u64, 17289265692384716055'u64)
@@ -343,3 +347,4 @@ test_proc:
    shakespear()
    zero_sensitive()
    not_equal()
+   increasing()

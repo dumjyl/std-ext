@@ -23,7 +23,7 @@ type
 proc init*[T](val: sink T): Opt[T] {.attach.} =
    result.val = val
    when T is Nilable:
-      debug:
+      when_debug:
          if unlikely(result.val == nil):
             OptError.throw($Opt[T] & " initialized with nil value")
    else:
@@ -48,7 +48,7 @@ proc is_none*[T](opt: Opt[T]): bool =
    result = not opt.is_val()
 
 proc unsafe_val*[T](opt: Opt[T]): T =
-   debug:
+   when_debug:
       if unlikely(opt.is_none()):
          OptError.throw($Opt[T] & " unpacking value failed")
    result = opt.val
@@ -91,7 +91,7 @@ proc init*[T, E](val: sink T): Res[T, E] {.attach.} =
    result.val = val
    result.err = default(E)
    when T is Nilable:
-      debug:
+      when_debug:
          if unlikely(result.val == nil):
             ResError.throw($Res[T, E] & " initialized with nil value")
    else:
@@ -110,25 +110,25 @@ proc is_err*[T, E](res: Res[T, E]): bool =
    result = not res.is_ok()
 
 proc unsafe_val*[T, E](res: Res[T, E]): lent T =
-   debug:
+   when_debug:
       if unlikely(res.is_err()):
          ResError.throw($Res[T, E] & " unpacking value failed")
    result = res.val
 
 proc unsafe_err*[T, E](res: Res[T, E]): lent E =
-   debug:
+   when_debug:
       if unlikely(res.is_ok()):
          ResError.throw($Res[T, E] & " unpacking error failed")
    result = res.err
 
 proc unsafe_take_val*[T, E](res: sink Res[T, E]): T =
-   debug:
+   when_debug:
       if unlikely(res.is_err()):
          ResError.throw($Res[T, E] & " unpacking value failed")
    result = res.val
 
 proc unsafe_take_err*[T, E](res: sink Res[T, E]): E =
-   debug:
+   when_debug:
       if unlikely(res.is_ok()):
          ResError.throw($Res[T, E] & " unpacking error failed")
    result = res.err

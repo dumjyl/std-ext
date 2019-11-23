@@ -16,10 +16,10 @@ proc init*[T](n: isize): cpp_vector[T] {.attach
 proc push_back*[T](self: var cpp_vector[T], val: T)
    {.import_cpp: "#.push_back(@)", header: H.}
 
-proc reserve*[T](self: var cpp_vector[T], cap: c_size)
+proc reserve*[T](self: var cpp_vector[T], cap: c_usize)
    {.import_cpp: "#.reserve(@)", header: H.}
 
-proc size*[T](self: cpp_vector[T]): c_size
+proc size*[T](self: cpp_vector[T]): c_usize
    {.import_cpp: "#.size()", header: H.}
 
 proc `[]`*[T](self: cpp_vector[T], i: isize): T

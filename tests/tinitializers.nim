@@ -12,9 +12,10 @@ type
       val: T
    R = range[43'u8..200'u8]
 
-proc init*[T](str: string, i32: int32, val: T): TInit[T] {.attach, auto_init.}
+proc init*[T](str: string, i32: int32, val: T): TInit[T] {.attach.} =
+   result = TInit[T](str: str, i32: i32, val: val)
 
-main_proc:
+run:
    block_of assert:
       TInit.init("abc", 123'i32, @[1, 2, 3]) == TInit[seq[int]](str: "abc",
                                                                 i32: 123.i32,
@@ -23,11 +24,11 @@ main_proc:
       seq[int].init(5).len == 5
       string.of_cap(5).len == 0
       seq[int].of_cap(5).len == 0
+   # block:
+      # let x = array[10, R].init()
+      # assert(x[^1] == 43)
    block:
-      let x = array[10, R].init()
-      assert(x[^1] == 43)
-   block:
-      let x = TInitOther[int32].init_from(TInit.init("123", 4'i32, ['a', 'b']))
+      let x = TInit[string].init("123", 4'i32, "val")
       let y = TInit[string].init_ref("ref", 64'i32, "inited")
       let z = TInit[string].init_ptr(y[])
       block_of assert:

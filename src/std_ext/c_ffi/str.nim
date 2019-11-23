@@ -19,7 +19,7 @@ proc init*(c_str: c_string): cpp_string {.attach,
 proc c_str*(self: cpp_string): c_string
    {.import_cpp: "#.c_str()", header: H.}
 
-proc size*(self: cpp_string): c_size
+proc size*(self: cpp_string): c_usize
    {.import_cpp: "#.size()", header: H.}
 
 proc push_back*(self: var cpp_string; c: char)
@@ -66,7 +66,7 @@ proc `$`*(str: cpp_string): string {.inline.} =
 proc mem*(self: var cpp_string): ptr char =
   result = self[0].addr
 
-test_proc:
+run(test):
    var x = cpp_string.init()
    x.add('a')
    x.add('b')

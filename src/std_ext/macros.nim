@@ -6,7 +6,7 @@ import
 
 export
    sys_macros except `$`, emit, copy_nim_tree, expect_kind, expect_len,
-                     expect_min_len
+                     expect_min_len, pragma, `pragma=`
 
 export
    macrocache
@@ -24,50 +24,77 @@ const
    nnk_sym_like_kinds* = {nnk_ident, nnk_sym, nnk_open_sym_choice,
                           nnk_closed_sym_choice}
 
-proc `$`*(n: Node): string =
-   let lit = "Literal:\n" & repr(n).indent(2)
-   let tree = "Tree:\n" & tree_repr(n).indent(2)
-   result = "Node:\n" & (lit & "\n" & tree).indent(2)
+const
+   fn_name_pos* = 0
+   fn_pragma_pos* = 4
 
-proc init*(Self: typedesc[NimNode], kind: NodeKind): Node =
-   result = new_NimNode(kind)
+const
+   indent_width = 2
+
+proc `$`*(n: Node): string =
+   ## A dollar function for NimNodes more suited for debgging.
+   # TODO: color support
+   let lit = "Literal:\n" & repr(n).indent(indent_width)
+   let tree = "Tree:\n" & tree_repr(n).indent(indent_width)
+   result = "Node:\n" & (lit & "\n" & tree).indent(indent_width)
+
+proc err*(ast: Node, msg: string, line_ast: Node = nil) =
+   let err_msg = msg & ":\n" & ($ast).indent(indent_width)
+   error(err_msg, if line_ast == nil: ast else: line_ast)
+
+proc err_ex*(ast: Node, msg: string, line_ast: Node = nil) =
+   let err_line_ast = if line_ast == nil: ast else: line_ast
+   var ast_str = repr(ast)
+   if ast_str.contains("\n"):
+      error(msg & ":\n" & ast_str.indent(indent_width), err_line_ast)
+   else:
+      error(msg & ": " & ast_str, err_line_ast)
+
+proc unexp_err*(ast: Node) =
+   ast.err("unexpected node")
 
 proc init*(kind: NodeKind, sons: varargs[Node]): Node =
-   result = Node.init(kind)
+   result = new_NimNode(kind)
    for son in sons:
       result.add(son)
 
 proc init*(kind: SymKind, name: string): Node =
    result = gen_sym(kind, name)
 
-proc tree*(kind: NodeKind, sons: varargs[Node]): Node =
-   result = kind.init(sons)
-
-proc node*(kind: NodeKind): Node =
-   result = kind.init()
-
-proc node*(kind: NodeKind, val: string): Node =
+proc init*(kind: NodeKind, val: string): Node =
    result = kind.init()
    result.str_val = val
 
-proc node*(kind: NodeKind, val: int): Node =
+proc init*(kind: NodeKind, val: int): Node =
    result = kind.init()
    result.int_val = val
 
-proc id*(name: string, public = false, pragmas: openarray[Node] = [],
-         backtick = false): Node =
+proc id*(
+      name: string,
+      public = false,
+      pragmas: openarray[Node] = [],
+      backtick = false
+      ): Node =
+   ## Identifer constructor with options for exporting, pragmas, and backtick
+   ## quoting.
    result = ident(name)
    if backtick:
       result = nnk_acc_quoted.init(result)
    if public:
       result = postfix(result, "*")
    if pragmas.len > 0:
-      result = nnk_pragma_expr.tree(result, nnk_pragma.tree(pragmas))
+      result = nnk_pragma_expr.init(result, nnk_pragma.init(pragmas))
 
-proc public_id*(name: string, pragmas: openarray[Node] = []): Node =
-   result = id(name, true, pragmas)
+proc public_id*(
+      name: string,
+      pragmas: openarray[Node] = [],
+      backtick = false
+      ): Node =
+   ## An alias for `id` that is always public.
+   result = id(name, true, pragmas, backtick)
 
 template empty*: Node =
+   ## Empty node constructor.
    nnk_empty.init()
 
 macro dump_ast*(body: untyped): untyped =
@@ -77,21 +104,21 @@ macro dump_typed_ast*(body: typed): untyped =
    echo body
 
 proc gen_type_def*(name: Node, def: Node): Node =
+   ## Generates a type section with a single type definition.
    result =
-      nnk_type_section.tree(
-         nnk_type_def.tree(
+      nnk_type_section.init(
+         nnk_type_def.init(
             name,
             empty,
             def))
 
-proc gen_typ_def*(name: Node, def: Node): Node =
-  result = gen_type_def(name, def)
-
 proc sons*(n: Node): seq[Node] =
+   ## Return a sequence of the sons of `n`.
    for son in n:
       result.add(son)
 
 proc typ_kind*(n: Node): TypeKind =
+   ## An alias for `macros.type_kind`.
    result = type_kind(n)
 
 proc skip*(n: Node, kind: NodeKind, pos: int|BackwardsIndex = ^1): Node =
@@ -114,15 +141,6 @@ proc skip*(n: Node, kinds: TypeKinds, pos: int|BackwardsIndex = ^1): Node =
    while result.len != 0 and result.typ_kind in kinds:
       result = result[pos]
 
-proc get_typ*[T](PT: typedesc[T]): Node =
-   result = get_type(T)
-
-proc get_typ_impl*[T](PT: typedesc[T]): Node =
-   result = get_type_impl(T)
-
-proc get_typ_inst*[T](PT: typedesc[T]): Node =
-   result = get_type_inst(T)
-
 proc typ*(n: Node, skip_typedesc = true): Node =
    result = get_type(n)
    if skip_typedesc:
@@ -138,15 +156,23 @@ proc typ_impl*(n: Node, skip_typedesc = true): Node =
    if skip_typedesc:
       result = result.skip(nty_typedesc)
 
+proc typ*(T: typedesc, skip_typedesc = true): Node =
+   result = get_type(T)
+   if skip_typedesc:
+      result = result.skip(nty_typedesc)
+
+proc typ_inst*(T: typedesc, skip_typedesc = true): Node =
+   result = get_type_inst(T)
+   if skip_typedesc:
+      result = result.skip(nty_typedesc)
+
+proc typ_impl*(T: typedesc, skip_typedesc = true): Node =
+   result = get_type_impl(T)
+   if skip_typedesc:
+      result = result.skip(nty_typedesc)
+
 proc impl*(n: Node): Node =
    result = get_impl(n)
-
-proc str*(n: Node): string =
-   case n.kind
-   of nnk_acc_quoted, nnk_closed_sym_choice, nnk_open_sym_choice:
-      result = n[0].str
-   else:
-      result = str_val(n)
 
 proc `id==`*(a: Node, b: string): bool =
    result = eq_ident(a, b)
@@ -160,6 +186,22 @@ proc `id==`*(a: Node, b: Node): bool =
 proc `id!=`*(a: Node, b: Node): bool =
    result = not eq_ident(a, b)
 
+proc str*(n: Node): string =
+   case n.kind
+   of nnk_postfix:
+      if `id==`(n[0], "*"):
+         result = str(n[1])
+      else:
+         unexp_err(n)
+   of nnk_str_lit .. nnk_triple_str_lit, nnk_comment_stmt, nnk_sym, nnk_ident:
+      result = n.str_val
+   of nnk_open_sym_choice, nnk_closed_sym_choice:
+      result = str(n[0])
+   of nnk_acc_quoted:
+      result = str(n[0])
+   else:
+      unexp_err(n)
+
 proc `type==`*(a: Node, b: Node): bool =
    result = same_type(a, b)
 
@@ -167,10 +209,10 @@ proc `type!=`*(a: Node, b: Node): bool =
    result = not same_type(a, b)
 
 proc `type==`*(a: Node, b: typedesc): bool =
-   result = `type==`(a, get_type(b))
+   result = `type==`(a, b.typ)
 
 proc `type!=`*(a: Node, b: typedesc): bool =
-   result = not `type==`(a, get_type(b))
+   result = not `type==`(a, b.typ)
 
 proc needs_len*(n: Node, len: int) =
    if n.len != len:
@@ -199,9 +241,6 @@ proc needs_id*(n: Node, idents: varargs[string]) =
          return
    error(&"bad node ident. needs<{idents}> got<{n.strVal}>\n{n}", n)
 
-proc unexp_node*(n: Node) =
-   error(&"unexpected node:\n{n}", n)
-
 proc low*(n: Node): int =
    result = 0
 
@@ -209,19 +248,24 @@ proc high*(n: Node): int =
    result = n.len - 1
 
 proc gen_def*(name: Node, typ: Node, val: Node): Node =
-   result = nnk_ident_defs.tree(name, typ, val)
+   result = nnk_ident_defs.init(name, typ, val)
 
 proc gen_def_id*(name: Node): Node =
-   result = nnk_ident_defs.tree(name, empty, empty)
+   result = nnk_ident_defs.init(name, empty, empty)
 
 proc gen_def_val*(name: Node, val: Node): Node =
-   result = nnk_ident_defs.tree(name, empty, val)
+   result = nnk_ident_defs.init(name, empty, val)
 
 proc gen_def_typ*(name: Node, typ: Node): Node =
-   result = nnk_ident_defs.tree(name, typ, empty)
+   result = nnk_ident_defs.init(name, typ, empty)
 
 proc gen_lit*[T](val: T): Node =
+   ## An alias for `new_lit`
    result = new_lit(val)
+
+proc gen_lit*[T: Node](val: T): Node =
+   ## A nop for generic code.
+   result = val
 
 proc call_stmt_field*(n: Node): tuple[lhs: Node, rhs: Node] =
    n.needs_kind(nnk_ident)
@@ -239,8 +283,11 @@ proc make_public*(n: Node): Node =
       n[0] = make_public(n[0])
    of nnk_ident:
       result = postfix(n, "*")
+   of nnk_postfix:
+      if n.len != 2 or `id!=`(n[0], "*"):
+         unexp_err(n)
    else:
-      unexp_node(n)
+      unexp_err(n)
 
 proc gen_var*(name: Node, typ: Node, val: Node): Node =
    result = nnk_var_section.init(gen_def(name, typ, val))
@@ -331,8 +378,8 @@ proc gen_block*(n: openarray[Node], label: Node = empty): Node =
 
 proc gen_proc*(
       name: Node,
-      frmls: openarray[Node],
-      ret: Node,
+      frmls: openarray[Node] = [],
+      ret: Node = empty,
       gnrcs: openarray[Node] = [],
       stmts = gen_stmts(),
       prgms: openarray[Node] = [],
@@ -342,7 +389,7 @@ proc gen_proc*(
       name,
       empty,
       nnk_generic_params.init(gnrcs),
-      nnk_formal_params.init(ret & @frmls),
+      nnk_formal_params.init((if ret != nil: ret else: empty)  & @frmls),
       if prgms.len > 0: nnk_pragma.init(prgms) else: empty,
       empty,
       stmts)
@@ -403,43 +450,128 @@ template gen*(stmts: untyped): untyped =
       stmts
    impl_gen()
 
-template exec_macro(stmts: untyped): untyped {.deprecated.} =
-  gen(stmts)
-
 type
-  FieldDesc* = tuple
-    name: string
-    typ: Node
+   FieldDesc* = tuple
+      name: string
+      typ: Node
 
 iterator field_descs*(T: typedesc): FieldDesc =
-  ## Case objects unsupported.
-  let typ = get_typ_impl(T)
-  typ.needs_kind(nnk_object_ty)
-  typ[2].needs_kind(nnk_rec_list)
-  for f in typ[2]:
-    f.needs_kind(nnk_ident_defs)
-    yield (f[0].str_val, f[1])
+   ## Case objects unsupported.
+   let typ = typ_impl(T)
+   typ.needs_kind(nnk_object_ty)
+   typ[2].needs_kind(nnk_rec_list)
+   for f in typ[2]:
+      f.needs_kind(nnk_ident_defs)
+      yield (f[0].str_val, f[1])
 
 proc gen_obj_ty*(
-    fields: openarray[Node],
-    pragmas: openarray[Node] = []
-    ): Node = 
-  result = nnk_object_ty.init()
-  if pragmas.len > 0:
-    result.add(nnk_pragma.init())
-    result[0].add(pragmas)
-  else:
-    result.add(empty)
-  result.add(empty)
-  result.add(nnk_rec_list.init())
-  result[2].add(fields)
+      fields: openarray[Node],
+      pragmas: openarray[Node] = [],
+      inherits: Node = nil,
+      ): Node = 
+   result = nnk_object_ty.init()
+   if pragmas.len > 0:
+      result.add(nnk_pragma.init())
+      result[0].add(pragmas)
+   else:
+      result.add(empty)
+   if inherits != nil:
+      result.add(nnk_of_inherit.init(inherits))
+   else:
+      result.add(empty)
+   result.add(nnk_rec_list.init())
+   result[2].add(fields)
 
-proc delete*(self: Node, i: int, n = 0) =
-  self.del(i, n)
+proc delete*(self: Node, i: int, n = 1) =
+   ## An alias for `macros.del` due to inconsistent meaning `seq`'s `del`.
+   self.del(i, n)
 
 proc set_len*(self: Node, len: int) =
-  if len > self.len:
-    for _ in 0 ..< len - self.len:
-      self.add(default(Node))
-  else:
-    self.delete(self.high, self.len - len)
+   ## Set the length of the node.
+   ##
+   ## Additional nodes added will be `nil`.
+   if len > self.len:
+      for _ in 0 ..< len - self.len:
+         self.add(default(Node))
+   else:
+      self.delete(self.high, self.len - len)
+
+proc pragmas*(ast: Node): Node =
+   case ast.kind:
+   of nnk_proc_def:
+      result = ast[fn_pragma_pos]
+   of nnk_pragma_expr:
+      result = ast[1]
+   else:
+      unexp_err(ast)
+
+proc `pragmas=`*(ast: Node, pragma_ast: Node) =
+   case ast.kind:
+   of nnk_proc_def:
+      ast[fn_pragma_pos] = pragma_ast
+   of nnk_pragma_expr:
+      ast[1] = pragma_ast
+   else:
+      unexp_err(ast)
+
+## TODO: make these work on nnk_proc_like and nnk_pragma list
+
+proc find_pragma(ast: Node, name: string): int =
+   ast.needs_kind(nnk_pragma)
+   for i, pragma in ast:
+      case pragma.kind:
+      of nnk_ident:
+         if `id==`(pragma, name):
+            return i
+      of nnk_expr_colon_expr:
+         if `id==`(pragma[0], name):
+            return i
+      else: discard
+   result = -1
+
+proc has_pragma*(ast: Node, name: string): bool =
+   case ast.kind:
+   of nnk_pragma:
+      result = find_pragma(ast, name) != -1
+   of nnk_proc_def:
+      result = has_pragma(ast.pragmas, name)
+   of nnk_pragma_expr:
+      result = has_pragma(ast.pragmas, name)
+   of nnk_empty:
+      result = false
+   else:
+      unexp_err(ast)
+
+proc get_pragma*(ast: Node, name: string, orig_ast: Node = nil): Node =
+   template err = err(if orig_ast == nil: ast else: orig_ast,
+                      "Failed to find pragma \"" & name & "\" on node")
+   case ast.kind:
+   of nnk_pragma:
+      let i = find_pragma(ast, name)
+      if i == -1:
+         err()
+      else:
+         result = ast[i]
+   of nnk_proc_def:
+      result = get_pragma(ast.pragmas, name, ast)
+   of nnk_pragma_expr:
+      result = get_pragma(ast.pragmas, name, ast)
+   else:
+      unexp_err(ast)
+
+proc remove_pragma*(ast: Node, name: string, must_exist = false) =
+   if must_exist and not ast.has_pragma(name):
+      ast.err("Failed to remove pragma \"" & name & "\" on node")
+   case ast.kind:
+   of nnk_pragma:
+      let i = find_pragma(ast, name)
+      if i != -1:
+         ast.delete(i)
+   of nnk_proc_def:
+      remove_pragma(ast.pragmas, name)
+      if ast.pragmas.len == 0:
+         ast.pragmas = empty
+   of nnk_pragma_expr:
+      remove_pragma(ast.pragmas, name)
+   else:
+      unexp_err(ast)

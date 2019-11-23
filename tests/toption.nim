@@ -2,12 +2,12 @@ import
   ./std_ext,
   ./std_ext/option
 
-main_proc:
+run:
    assert(size_of(Opt[i8]) == 2)
    assert(size_of(Opt[ref i8]) == 8)
    type MaybeFloat = Opt[ref f32]
    var x: ref f32
-   debug:
+   when_debug:
       do_assert_raises OptError: discard MaybeFloat.init(x)
       do_assert_raises OptError: discard Opt.init(x)
       do_assert_raises OptError: discard Opt[ref f32].init(x)

@@ -1,5 +1,5 @@
 import
-   std_ext,
+   ../std_ext,
    std/sequtils as sys_seq_utils
 
 export
@@ -27,7 +27,7 @@ proc combinations*(T: typedesc[enum], n: int): seq[seq[T]] =
    for combo in T.combinations(n):
       result.add(combo)
 
-test_proc:
+run(test):
    type Kind = enum A, B, C
    assert(Kind.combinations(3) == @[@[A, A, A], @[B, A, A], @[C, A, A],
                                     @[A, B, A], @[B, B, A], @[C, B, A],
