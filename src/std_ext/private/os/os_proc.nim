@@ -8,11 +8,12 @@ export
    streams
 
 proc init*(
+      Self: type[Process],
       command: string,
       args: openarray[string] = [],
       options: set[ProcessOption] = {po_stderr_to_stdout, po_use_path},
       working_dir: string = "",
-      ): Process {.attach, inline.} =
+      ): Process {.inline.} =
    ## `Process` constructor.
    result = start_Process(command, working_dir, args, nil, options)
 

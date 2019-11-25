@@ -163,10 +163,13 @@ type
       k3: u64
       k4: u64
 
-proc init*(k1 = 0xe7b0c93ca8525013'u64,
-           k2 = 0x011d02b854ae8182'u64,
-           k3 = 0x7bcc5cf9c39cec76'u64,
-           k4 = 0xfa336285d102d083'u64): Hasher {.attach.} =
+proc init*(
+      Self: type[Hasher],
+      k1 = 0xe7b0c93ca8525013'u64,
+      k2 = 0x011d02b854ae8182'u64,
+      k3 = 0x7bcc5cf9c39cec76'u64,
+      k4 = 0xfa336285d102d083'u64
+      ): Hasher =
    ## Initialize a `Hasher` with 4 keys. Hash primitive values and buffers of
    ## primite values with the overloaded `mix` proc, then call `finish`.
    result = Hasher(state: bit_xor(k1, k3), k1: k1, k2: k2, k3: k3, k4: k4)

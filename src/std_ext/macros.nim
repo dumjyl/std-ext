@@ -325,9 +325,6 @@ proc gen_index*(x: Node, idxs: varargs[Node]): Node =
    result = nnk_bracket_expr.init(x)
    result.add(idxs)
 
-proc gen_typ*[T: typedesc](TArg: typedesc[T], InnerT: Node): Node =
-   nnk_bracket_expr.init(id"typedesc", InnerT)
-
 proc elem_typ*(n: Node): Node =
    case n.typ_kind:
    of nty_array:

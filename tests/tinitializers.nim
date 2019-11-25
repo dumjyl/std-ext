@@ -12,7 +12,12 @@ type
       val: T
    R = range[43'u8..200'u8]
 
-proc init*[T](str: string, i32: int32, val: T): TInit[T] {.attach.} =
+proc init*[T](
+      Self: type[TInit[T]],
+      str: string,
+      i32: int32,
+      val: T
+      ): TInit[T] =
    result = TInit[T](str: str, i32: i32, val: val)
 
 run:
@@ -30,14 +35,17 @@ run:
    block:
       let x = TInit[string].init("123", 4'i32, "val")
       let y = TInit[string].init_ref("ref", 64'i32, "inited")
-      let z = TInit[string].init_ptr(y[])
+      let y2 = TInit[string].init_ref(x)
+      let z = TInit[string].init_ptr("123", 4'i32, "val")
+      let w = TInit[string].init_ptr(y[])
       block_of assert:
          x.str == "123"
          x.i32 == 4'i32
          y.str == "ref"
          y.i32 == 64'i32
          y.val == "inited"
-         z.str == "ref"
-         z.i32 == 64'i32
-         z.val == "inited"
+         z.str == "123"
+         z.i32 == 4'i32
+         z.val == "val"
       dealloc(z)
+      dealloc(w)

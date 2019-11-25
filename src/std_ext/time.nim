@@ -7,13 +7,14 @@ import
 export monotimes
 export times except `$`
 
-proc current*: MonoTime {.attach.} =
+proc current*(Self: type[MonoTime]): MonoTime =
    result = get_MonoTime()
 
-proc nano_secs*: i64 {.attach: MonoTime.} =
+proc nano_secs*(Self: type[MonoTime]): i64 =
    result = get_MonoTime().ticks()
 
 proc init*(
+      Self: type[Duration],
       nanoseconds,
       microseconds,
       milliseconds,
@@ -22,7 +23,7 @@ proc init*(
       hours,
       days,
       weeks: i64 = 0
-   ): Duration {.attach, inline.} =
+      ): Duration {.inline.} =
    result = init_Duration(nanoseconds, microseconds, milliseconds, seconds,
                           minutes, hours, days, weeks)
 

@@ -97,9 +97,8 @@ template templ_engine(
       ResultT: typedesc,
       cpp_name: static string,
       BaseT: typedesc) =
-   proc init*(value: ResultT): EngineT
-      {.attach, import_cpp: "std::" & cpp_name & "(@)", constructor,
-        header: H.}
+   proc init*(Self: type[EngineT], value: ResultT): EngineT
+      {.import_cpp: "std::" & cpp_name & "(@)", constructor, header: H.}
 
    proc seed*(self: EngineT; value: ResultT)
       {.import_cpp: "#.seed(@)", header: H.}
@@ -111,7 +110,7 @@ template templ_engine(
    proc sample*(self: EngineT): ResultT
       {.import_cpp: "#()", header: H.}
 
-   proc discards*(self: EngineT; z: culonglong)
+   proc discards*(self: EngineT; z: c_ulonglong)
       {.import_cpp: "#.discard(@)", header: H.}
 
    proc min*(self: typedesc[EngineT]): ResultT
@@ -149,16 +148,24 @@ proc entropy*(self: RandomDevice): c_double
 
 # --- UniformInt ---
 
-proc init*[T: SomeInteger](a: T, b: T): UniformIntDist[T] {.attach,
-   import_cpp: "std::uniform_int_distribution<'*0>(@)", header: H.}
+proc init*[T: SomeInteger](
+      Self: type[UniformIntDist[T]],
+      a: T,
+      b: T
+      ): UniformIntDist[T]
+   {.import_cpp: "std::uniform_int_distribution<'*0>(@)", header: H.}
 
 proc sample*[T: SomeInteger; G](self: UniformIntDist[T], gen: var G): T
    {.import_cpp: "#(@)", header: H.}
 
 # --- UniformReal ---
 
-proc init*[T: SomeFloat](a: T, b: T): UniformRealDist[T] {.attach,
-   import_cpp: "std::uniform_real_distribution<'*0>(@)", header: H.}
+proc init*[T: SomeFloat](
+      Self: type[UniformRealDist[T]],
+      a: T,
+      b: T
+      ): UniformRealDist[T]
+   {.import_cpp: "std::uniform_real_distribution<'*0>(@)", header: H.}
 
 proc sample*[T: SomeFloat; G](self: UniformRealDist[T], gen: var G): T
    {.import_cpp: "#(@)", header: H.}
@@ -172,7 +179,7 @@ type
       else:
          dist: UniformRealDist[T]
 
-proc init*[T: SomeNumber](a: T, b: T): Uniform[T] {.attach.} =
+proc init*[T: SomeNumber](Self: type[Uniform[T]], a: T, b: T): Uniform[T] =
    when T is SomeInteger:
       result = Uniform[T](dist: UniformIntDist.init(a, b))
    else:
@@ -183,8 +190,12 @@ proc sample*[T: SomeNumber; G](self: Uniform[T], gen: var G): T =
 
 # --- Normal ---
 
-proc init*[T: SomeFloat](mean: T, std_dev: T): NormalDist[T]
-   {.attach, import_cpp: "std::normal_distribution<'*0>(@)", header: H.}
+proc init*[T: SomeFloat](
+      Self: type[NormalDist[T]],
+      mean: T,
+      std_dev: T
+      ): NormalDist[T]
+   {.import_cpp: "std::normal_distribution<'*0>(@)", header: H.}
 
 proc sample*[T: SomeFloat; G](self: NormalDist[T], gen: G): T
    {.import_cpp: "#(@)", header: H.}
@@ -204,13 +215,22 @@ proc uniform*[T: SomeNumber](a: T, b: T): T =
 proc uniform*[T: SomeNumber](params: Slice[T]): T =
    result = uniform(params.a, params.b)
 
-proc uniform*[T: SomeNumber](n: isize, a: T, b: T): seq[T] {.attach.} =
+proc uniform*[T: SomeNumber](
+      Self: type[seq[T]],
+      n: isize,
+      a: T,
+      b: T
+      ): seq[T] =
    var dist = Uniform.init(a, b)
    result = seq[T].init(n)
    for i in span(n):
       result[i] = dist.sample(rng)
 
-proc uniform*[T: SomeNumber](n: isize, params: Slice[T]): seq[T] {.attach.} =
+proc uniform*[T: SomeNumber](
+      Self: type[seq[T]],
+      n: isize,
+      params: Slice[T]
+      ): seq[T] =
    result = seq[T].uniform(params.a, params.b)
 
 proc uniform*[T: SomeNumber](data: var openarray[T], a: T, b: T) =
@@ -230,7 +250,12 @@ proc normal*[T: SomeFloat](data: var openarray[T], mean: T, std_dev: T): T =
    for i in span(data):
       result[i] = dist.sample(rng)
 
-proc normal*[T: SomeFloat](n: isize, mean: T, std_dev: T): seq[T] {.attach.} =
+proc normal*[T: SomeFloat](
+      Self: type[seq[T]],
+      n: isize,
+      mean: T,
+      std_dev: T
+      ): seq[T] =
    var dist = NormalDist.init(mean, std_dev)
    result = seq[T].init(n)
    for i in span(n):

@@ -1,12 +1,12 @@
 import
-   ./attachs,
    ./types
 
-proc init*[T](len: Natural = 0.Natural): seq[T] {.attach, inline.} =
+proc init*[T](
+      Self: type[seq[T]], len: Natural = 0.Natural): seq[T] {.inline.} =
    ## Return a new ``seq`` with length ``len`` of zero initialized elements.
    result = new_seq[T](len)
 
-proc of_cap*[T](cap: Natural): seq[T] {.attach, inline.} =
+proc of_cap*[T](Self: type[seq[T]], cap: Natural): seq[T] {.inline.} =
    ## Return a new ``seq`` with a capacity ``cap``.
    result = new_seq_of_cap[T](cap)
 
@@ -28,11 +28,11 @@ proc `&`*[I: static isize, T](a: T, b: array[I, T]): array[I + 1, T] =
       result[i+1] = b[i]
 
 proc `&`*[T](a: openarray[T], b: openarray[T]): seq[T] =
-  result = seq[T].init(a.len + b.len)
-  for i in 0 ..< len(a):
-     result[i] = a[i]
-  for i in 0 ..< len(b):
-     result[a.len + i] = b[i]
+   result = seq[T].init(a.len + b.len)
+   for i in 0 ..< len(a):
+      result[i] = a[i]
+   for i in 0 ..< len(b):
+      result[a.len + i] = b[i]
 
 proc `&`*[T](a: openarray[T], b: T): seq[T] =
    result = @a

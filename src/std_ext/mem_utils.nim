@@ -113,10 +113,11 @@ proc `$`*[T](self: RcData[T]): string =
    result &= "]"
 
 proc init*[T](
+      Self: type[RcData[T]],
       len: isize,
       allocator = get_local_allocator(),
       zero_mem = true,
-      ): RcData[T] {.attach.} =
+      ): RcData[T] =
    ## Return an allocation for reference counted data structures.
    ##
    ## Use `inc_ref` and `dec_ref`, or `deinit` to manually free.

@@ -1,8 +1,7 @@
 import
-   ./types,
-   ./attachs
+   ./types
 
-proc init*(str: string): c_string {.attach.} =
+proc init*(Self: type[c_string], str: string): c_string =
    ## Allocates a `c_string` with the contents of `str`.
    ##
    ## This must be freed manually.
@@ -11,7 +10,10 @@ proc init*(str: string): c_string {.attach.} =
       result[i] = c
    result[str.len] = char(0)
 
-proc init*(strs: openarray[string]): c_string_array {.attach, inline.} =
+proc init*(
+      Self: type[c_string_array],
+      strs: openarray[string]
+      ): c_string_array {.inline.} =
    ## Allocates a `c_string_array` with the contents of `strs`.
    ##
    ## This must be freed manually with `free`.
@@ -51,7 +53,10 @@ type
 proc inner*(c_strs: CStringArray): c_string_array =
    result = c_strs.impl
 
-proc init*(strs: openarray[string]): CStringArray {.attach.} =
+proc init*(
+      Self: type[CStringArray],
+      strs: openarray[string]
+      ): CStringArray =
    result = CStringArray(impl: c_string_array.alloc(strs))
 
 proc `=`*(dst: var CStringArray, src: CStringArray) =

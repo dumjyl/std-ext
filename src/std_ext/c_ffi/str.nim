@@ -7,14 +7,14 @@ const
 type
    cpp_string*{.import_cpp: "std::string", header: H.} = object
 
-proc init*: cpp_string {.attach,
-   import_cpp: "std::string()", constructor, header: H.}
+proc init*(Self: type[cpp_string]): cpp_string
+  {.import_cpp: "std::string()", constructor, header: H.}
 
-proc init*(n: isize, c: char): cpp_string {.attach,
-   import_cpp: "std::string(@)", constructor, header: H.}
+proc init*(Self: type[cpp_string], n: isize, c: char): cpp_string
+  {.import_cpp: "std::string(@)", constructor, header: H.}
 
-proc init*(c_str: c_string): cpp_string {.attach,
-   import_cpp: "std::string(@)", constructor, header: H.}
+proc init*(Self: type[cpp_string],  c_str: c_string): cpp_string
+  {.import_cpp: "std::string(@)", constructor, header: H.}
 
 proc c_str*(self: cpp_string): c_string
    {.import_cpp: "#.c_str()", header: H.}
@@ -53,7 +53,7 @@ iterator items*(self: cpp_string): char {.inline.} =
    for i in span(self):
       yield self[i]
 
-proc init*(str: string): cpp_string {.attach, inline.} =
+proc init*(Self: type[cpp_string], str: string): cpp_string {.inline.} =
    result = cpp_string.init()
    for c in str:
       result.add(c)

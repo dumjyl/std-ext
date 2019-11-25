@@ -2,7 +2,6 @@ import
    std_ext/macros,
    std_ext/private/std_ext/[iterators,
                             types,
-                            attachs,
                             mem,
                             errors,
                             c_strs,
@@ -13,7 +12,6 @@ import
 export
    iterators,
    types,
-   attachs,
    mem,
    errors,
    c_strs,
@@ -39,7 +37,7 @@ proc `$`*(x: ref|ptr): string =
    else:
       result = $x[]
 
-proc init_ref*[T](val: T): ref T {.attach: T, inline.} =
+proc init_ref*[T](Self: type[T], val: T): ref T {.inline.} =
    when T is ref:
       # new is specialized for ref so double the ref to avoid this.
       result = new(ref T)
@@ -47,7 +45,7 @@ proc init_ref*[T](val: T): ref T {.attach: T, inline.} =
       result = new(T)
    result[] = val
 
-proc init_ptr*[T](val: T): ptr T {.attach: T, inline.} =
+proc init_ptr*[T](Self: type[T], val: T): ptr T {.inline.} =
    result = create(T)
    result[] = val
 
@@ -61,10 +59,10 @@ proc gen_init_ref_or_ptr(T: Node, args: Node, call_str: string): Node =
    result.add(sym)
    result = gen_block(result)
 
-macro init_ref*(T: typedesc[object], args: varargs[untyped]): ref =
+macro init_ref*(T: type[object], args: varargs[untyped]): ref =
    result = gen_init_ref_or_ptr(T, args, "new")
 
-macro init_ptr*(T: typedesc[object], args: varargs[untyped]): ptr =
+macro init_ptr*(T: type[object], args: varargs[untyped]): ptr =
    result = gen_init_ref_or_ptr(T, args, "create")
 
 when not compiles(low(u64)):

@@ -7,11 +7,11 @@ const
 type
    cpp_vector*[T] {.import_cpp: "std::vector<'0>", header: H.} = object
 
-proc init*[T]: cpp_vector[T] {.attach
-   import_cpp: "std::vector<'*0>()", constructor, header: H.}
+proc init*[T](Self: type[cpp_vector[T]]): cpp_vector[T]
+   {.import_cpp: "std::vector<'*0>()", constructor, header: H.}
 
-proc init*[T](n: isize): cpp_vector[T] {.attach
-   import_cpp: "std::vector<'*0>(@)", constructor, header: H.}
+proc init*[T](Self: type[cpp_vector[T]], n: isize): cpp_vector[T]
+   {.import_cpp: "std::vector<'*0>(@)", constructor, header: H.}
 
 proc push_back*[T](self: var cpp_vector[T], val: T)
    {.import_cpp: "#.push_back(@)", header: H.}
@@ -46,7 +46,7 @@ template span*[T](self: cpp_vector[T]): untyped =
 proc add*[T](self: var cpp_vector[T], val: T) {.inline.} =
    self.push_back(val)
 
-proc init*[T](xs: openarray[T]): cpp_vector[T] {.attach.} =
+proc init*[T](Self: type[cpp_vector[T]], xs: openarray[T]): cpp_vector[T] =
    result = cpp_vector[T].init()
    result.reserve(xs.len.c_size)
    for x in xs:

@@ -28,7 +28,8 @@ proc combinations*(T: typedesc[enum], n: int): seq[seq[T]] =
       result.add(combo)
 
 run(test):
-   type Kind = enum A, B, C
+   type
+      Kind = enum A, B, C
    assert(Kind.combinations(3) == @[@[A, A, A], @[B, A, A], @[C, A, A],
                                     @[A, B, A], @[B, B, A], @[C, B, A],
                                     @[A, C, A], @[B, C, A], @[C, C, A],

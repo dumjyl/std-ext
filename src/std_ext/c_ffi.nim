@@ -21,9 +21,11 @@ macro emit*(emits: varargs[untyped]): untyped =
             result))
 
 when defined(cpp):
-   type SizeOfT = c_usize
+   type
+      SizeOfT = c_usize
 else:
-   type SizeOfT = c_int
+   type
+      SizeOfT = c_int
 
 proc c_size_of*[T](val: T): usize =
    ## c/c++ sizeof, for debugging.

@@ -19,10 +19,11 @@ proc `=sink`*(dst_f: var FileEx, src_f: FileEx) =
    dst_f.impl = src_f.impl
 
 proc init*(
+      Self: type[FileEx],
       file_path: string,
       mode = fm_read,
       buf_size: int = -1,
-      ): FileEx {.attach.} =
+      ): FileEx =
    ## `FileEx` constructor.
    result = FileEx(impl: file_path.open(mode, buf_size))
 

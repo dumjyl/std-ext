@@ -8,10 +8,13 @@ export
 type
    Set*[T] = HashSet[T]
 
-proc init*[T](cap = default_initial_size): Set[T] {.attach, inline.} =
+proc init*[T](
+      Self: type[Set[T]],
+      cap = default_initial_size
+      ): Set[T] {.inline.} =
    result = init_HashSet[T](right_size(cap))
 
-proc init*[T](xs: openarray[T]): Set[T] {.attach, inline.} =
+proc init*[T](Self: type[Set[T]], xs: openarray[T]): Set[T] {.inline.} =
    result = Set[T].init()
    for x in xs:
       result.incl(x)
