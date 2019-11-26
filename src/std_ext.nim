@@ -20,11 +20,10 @@ export
    str
 
 from sugar import
-   dump,
    `=>`,
    `->`
+
 export
-   dump,
    `=>`,
    `->`
 
