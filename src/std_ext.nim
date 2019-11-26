@@ -37,50 +37,28 @@ proc `$`*(x: ref|ptr): string =
    else:
       result = $x[]
 
-proc init_ref*[T](Self: type[T], val: T): ref T {.inline.} =
-   when T is ref:
-      # new is specialized for ref so double the ref to avoid this.
-      result = new(ref T)
-   else:
-      result = new(T)
+proc init*[T](Self: type[ref T], val: T): ref T =
+   # Creates a `ref Obj` from and `Obj`
+   # XXX: (ref Generic).init(Generic[int](val: 1)) loses the generic arg.
+   new(result)
    result[] = val
 
-proc init_ptr*[T](Self: type[T], val: T): ptr T {.inline.} =
+template init*[T](Self: type[ref T], args: varargs[untyped]): auto =
+   # Creates a `ref Obj` from `Obj.init(args)`
+   var res = new(ref type_of(init(type(T), args)))
+   res[] = init(type(T), args)
+   res
+
+proc init*[T](Self: type[ptr T], val: T): ptr T =
+   # Creates a `ptr Obj` from and `Obj`
    result = create(T)
    result[] = val
 
-proc gen_init_ref_or_ptr(T: Node, args: Node, call_str: string): Node =
-   let sym = nsk_var.init("x")
-   result = gen_stmts(gen_var_val(sym, gen_call(call_str, T)))
-   var call = "init".gen_call(T)
-   for arg in args:
-      call.add(arg)
-   result.add(nnk_asgn.init(nnk_deref_expr.init(sym), call))
-   result.add(sym)
-   result = gen_block(result)
-
-macro init_ref*(T: type[object], args: varargs[untyped]): ref =
-   result = gen_init_ref_or_ptr(T, args, "new")
-
-macro init_ptr*(T: type[object], args: varargs[untyped]): ptr =
-   result = gen_init_ref_or_ptr(T, args, "create")
-
-when not compiles(low(u64)):
-   proc low*[T: u32|u64|usize](PT: typedesc[T]): T =
-      when size_of(T) == 8:
-         result = cast[T](0'i64)
-      elif size_of(T) == 4:
-         result = cast[T](0'i32)
-      else:
-         {.error: "unsupported bitsize for low(u32|u64|usize)".}
-
-   proc high*[T: u32|u64|usize](PT: typedesc[T]): T =
-      when size_of(T) == 8:
-         result = cast[T](-1'i64)
-      elif size_of(T) == 4:
-         result = cast[T](-1'i32)
-      else:
-         {.error: "unsupported bitsize for high(u32|u64|usize)".}
+template init*[T](Self: type[ptr T], args: varargs[untyped]): auto =
+   # Creates a `ptr Obj` from `Obj.init(args)`
+   var res = create(type_of(init(type(T), args)))
+   res[] = init(type(T), args)
+   res
 
 template deref*[T](x: ptr T): var T =
    ## Dereference `x`.
@@ -90,11 +68,11 @@ template deref*[T](x: ref T): var T =
    ## Dereference `x`.
    x[]
 
-proc bit_cast*[From, To](x: From, PTo: typedesc[To]): To {.inline.} =
-   ## An alias for cast that takes a typedesc.
+proc bit_cast*[From, To](x: From, PTo: type[To]): To {.inline.} =
+   ## An alias for cast that takes a type.
    result = cast[To](x)
 
-proc bit_size_of*[T](PT: typedesc[T]): isize {.inline.} =
+proc bit_size_of*[T](PT: type[T]): isize {.inline.} =
    ## Return the size in bits of a type.
    result = size_of(T) * 8
 

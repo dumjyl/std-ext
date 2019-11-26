@@ -36,11 +36,11 @@ macro tupled*(T: typedesc, N: static int): typedesc =
    for i in 0 ..< N:
       result.add(T)
 
-template deref*[T](PT: typedesc[ptr T]): typedesc =
+template deref*[T](PT: typedesc[ptr T]): untyped =
    ## Get the inner type of a ptr.
    T
 
-template deref*[T](PT: typedesc[ref T]): typedesc =
+template deref*[T](PT: typedesc[ref T]): untyped =
    ## Get the inner type of a ref.
    T
 
