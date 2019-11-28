@@ -119,6 +119,9 @@ macro fixup_varargs*(call: untyped): untyped =
       call.add(arg)
    result = call
 
+proc add_tup*[T0, T1](self: var seq[(T0, T1)], a: T0, b: T1) =
+   self.add((a, b))
+
 sec(test):
    type
       Obj = object
