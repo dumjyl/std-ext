@@ -13,7 +13,7 @@ type
 proc some*[T](val: sink T): Opt[T] =
    result.val = val
    when T is Nilable:
-      when_debug:
+      when not defined(release):
          if unlikely(result.val == nil):
             OptError.throw($Opt[T] & " initialized with nil value")
    else:
@@ -32,7 +32,7 @@ proc is_none*[T](opt: Opt[T]): bool =
    result = not opt.is_val()
 
 proc unsafe_val*[T](opt: Opt[T]): T =
-   when_debug:
+   when not defined(release):
       if unlikely(opt.is_none()):
          OptError.throw($Opt[T] & " unpacking value failed")
    result = opt.val

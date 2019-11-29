@@ -20,3 +20,6 @@ template fields*[T: ref object](x: T): untyped {.dirty.} =
 
 template fields_pairs*[T: ref object](x: T): untyped {.dirty.} =
    fields_pairs(x[])
+
+template mutable*[T](vals: var seq[T]): untyped =
+   m_items(vals)

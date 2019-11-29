@@ -1,6 +1,6 @@
 import
-  ../../macros,
-  ./types
+   ../../macros,
+   ./types
 from std/strutils import cmp_ignore_style
 
 template loop*(label: untyped, stmts: untyped): untyped =
@@ -34,6 +34,8 @@ template mode_condition(condition: untyped): bool =
       is_main_module
    elif `ast_str~=`(condition, test):
       defined(testing)
+   elif `ast_str~=`(condition, debug):
+      not defined(release)
    else:
       defined(condition)
 
@@ -41,8 +43,9 @@ template sec*(condition: untyped, stmts: untyped) =
    ## A section of code defined only upon `condition`.
    ##
    ## This condition may be:
-   ## * `app`, `main` for `isMainModule`
-   ## * `test` for `-d:testing`
+   ## * `app`, `main` for `isMainModule`.
+   ## * `test` for `-d:testing`.
+   ## * `debug` for lack of `-d:release`
    ## * Some other define.
    when mode_condition(condition):
       stmts
@@ -51,7 +54,6 @@ template run*(condition, stmts: untyped) =
    ## A version of `run` that takes a condition like `sec`.
    when mode_condition(condition):
       run(stmts)
-
 
 proc impl_unroll[T](n: NimNode, x_sym: NimNode, x: T): NimNode =
    result = n
@@ -89,8 +91,3 @@ macro block_of*(op, stmts: untyped): untyped =
    for i in 0 ..< stmts.len:
       stmts[i] = nnk_call.init(op, stmts[i])
    result = stmts
-
-template when_debug*(body: untyped): untyped =
-   ## A section of code only defined for non-release builds.
-   when not defined(release):
-      body

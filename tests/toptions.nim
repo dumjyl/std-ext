@@ -8,7 +8,7 @@ run:
    type
       MaybeFloat = Opt[ref f32]
    var x: ref f32
-   when_debug:
+   sec(debug):
       do_assert_raises OptError: discard some(x)
    var y = new(f32)
 
