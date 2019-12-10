@@ -465,7 +465,7 @@ proc gen_obj_ty*(
       fields: openarray[Node],
       pragmas: openarray[Node] = [],
       inherits: Node = nil,
-      ): Node = 
+      ): Node =
    result = nnk_object_ty.init()
    if pragmas.len > 0:
       result.add(nnk_pragma.init())

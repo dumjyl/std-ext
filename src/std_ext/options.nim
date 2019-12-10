@@ -49,7 +49,13 @@ proc unsafe_maybe_uninit_take_val*[T](opt: sink Opt[T]): T =
    else:
       result = default(T)
 
-template `?=`*(maybe_val: untyped, name: untyped): untyped =
+template `?=`*(maybe_val: untyped, name: untyped): bool =
+   let temp_maybe_val = maybe_val
+   let has_val = temp_maybe_val.is_val()
+   var name = unsafe_maybe_uninit_take_val(temp_maybe_val)
+   has_val
+
+template is_val(maybe_val: untyped, name: untyped): bool =
    let temp_maybe_val = maybe_val
    let has_val = temp_maybe_val.is_val()
    var name = unsafe_maybe_uninit_take_val(temp_maybe_val)
