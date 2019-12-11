@@ -41,8 +41,8 @@ proc c_size_of*(T: typedesc): usize =
 
 macro ptr_tmps*(call: untyped): untyped =
    call.needs_kind(nnk_call_kinds)
-   var tmp_vars: seq[Node]
-   var set_locs: seq[Node]
+   var tmp_vars: seq[NimNode]
+   var set_locs: seq[NimNode]
    for i in span(call):
       if call[i].kind == nnk_infix and `id==`(call[i][0], ":="):
          let sym = nsk_var.init("ptr_tmp" & $tmp_vars.len)

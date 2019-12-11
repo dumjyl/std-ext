@@ -106,7 +106,7 @@ macro fixup_varargs*(call: untyped): untyped =
       # use_echo_vals(2, "3") # segfaults.
       use_echo_vals_fixed(2, "3")
    call.needs_kind(nnk_call_kinds)
-   var args = seq[Node].init()
+   var args = seq[NimNode].init()
    for arg in call:
       if arg.kind == nnk_hidden_std_conv and arg.len == 2 and
          arg[0].kind == nnk_empty and arg[1].kind == nnk_bracket:

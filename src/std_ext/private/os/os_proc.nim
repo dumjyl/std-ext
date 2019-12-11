@@ -38,4 +38,4 @@ proc exec*(
    p.close()
 
 proc exec_live*(command: string, args: openarray[string] = []): int =
-   exec_cmd(command & " " & args.join(" "))
+   result = exec_cmd(command & " " & args.join(" "))

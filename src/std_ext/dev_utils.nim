@@ -4,7 +4,7 @@ import
 from ./c_ffi import emit
 
 
-proc impl_is_literal(n: Node): bool =
+proc impl_is_literal(n: NimNode): bool =
    case n.kind:
    of nnk_literals:
       result = true
