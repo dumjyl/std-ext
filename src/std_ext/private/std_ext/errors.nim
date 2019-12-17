@@ -1,7 +1,5 @@
-import
-   std/terminal
-from std/macros import
-   error
+import std/terminal
+from std/macros import error
 
 template init*[T: Exception](Self: typedesc[T], message: string,
                              parent_exception: ref Exception = nil): ref T =

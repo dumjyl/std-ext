@@ -1,7 +1,7 @@
 import
-   ./options,
+   options,
    std/os as sys_os,
-   ./private/os/os_proc
+   private/os/os_proc
 
 export
    sys_os except get_env, find_exe

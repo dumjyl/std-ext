@@ -1,5 +1,5 @@
 import
-   ./types
+   types
 
 proc init*[T](
       Self: type[seq[T]], len: Natural = 0.Natural): seq[T] {.inline.} =

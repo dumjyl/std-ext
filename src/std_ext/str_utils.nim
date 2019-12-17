@@ -1,6 +1,6 @@
 import
    ../std_ext,
-   ./macros,
+   macros,
    std/strutils as sys_str_utils
 
 export

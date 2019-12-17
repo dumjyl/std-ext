@@ -1,6 +1,6 @@
 import
    ../std_ext,
-   ./build
+   build
 
 ## https://en.cppreference.com/w/cpp/header/random
 

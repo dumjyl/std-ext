@@ -1,7 +1,7 @@
 import
    ../std_ext,
-   ./macros
-from ./c_ffi import emit
+   macros
+from c_ffi import emit
 
 
 proc impl_is_literal(n: NimNode): bool =

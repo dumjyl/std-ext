@@ -1,7 +1,7 @@
 import
    ../std_ext,
-   ./macros,
-   ./os
+   macros,
+   os
 
 type
    CError* = object of CatchableError

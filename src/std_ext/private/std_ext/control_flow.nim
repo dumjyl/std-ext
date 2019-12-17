@@ -1,6 +1,6 @@
 import
    ../../macros,
-   ./types
+   types
 from std/strutils import cmp_ignore_style
 
 template loop*(label: untyped, stmts: untyped): untyped =

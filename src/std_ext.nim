@@ -122,6 +122,10 @@ macro fixup_varargs*(call: untyped): untyped =
 proc add_tup*[T0, T1](self: var seq[(T0, T1)], a: T0, b: T1) =
    self.add((a, b))
 
+template import_exists*(module: untyped): bool =
+   compiles:
+      import module
+
 sec(test):
    type
       Obj = object

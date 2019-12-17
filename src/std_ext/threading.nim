@@ -1,6 +1,6 @@
 import
    ../std_ext,
-   ./macros,
+   macros,
    std/concurrency/atomics
 
 export atomics

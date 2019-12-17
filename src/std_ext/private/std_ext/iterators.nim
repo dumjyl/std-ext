@@ -1,5 +1,5 @@
 import
-   ./types,
+   types,
    ../../macros
 
 iterator items*(T: typedesc[bool]): bool {.inline.} =

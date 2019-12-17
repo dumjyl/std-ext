@@ -1,8 +1,8 @@
 import
    ../std_ext,
-   ./str_utils,
-   std/[monotimes,
-        times]
+   str_utils,
+   std/monotimes,
+   std/times
 
 export monotimes
 export times except `$`

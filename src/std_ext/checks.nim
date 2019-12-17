@@ -1,4 +1,6 @@
-include system/[fatal, indexerrors]
+include
+   system/fatal,
+   system/indexerrors
 import
    ../std_ext
 

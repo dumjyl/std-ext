@@ -1,7 +1,8 @@
 import
    ../../../std_ext,
    ../../str_utils,
-   std/[osproc, streams]
+   std/osproc,
+   std/streams
 
 export
    osproc,

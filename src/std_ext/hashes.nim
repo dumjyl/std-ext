@@ -1,6 +1,6 @@
 import
    ../std_ext,
-   ./mem_utils,
+   mem_utils,
    std/bitops
 
 # port of seahash: https://gitlab.redox-os.org/redox-os/seahash

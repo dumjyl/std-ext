@@ -1,5 +1,5 @@
 import
-   ./types
+   types
 
 proc init*(Self: type[c_string], str: string): c_string =
    ## Allocates a `c_string` with the contents of `str`.

@@ -1,5 +1,5 @@
 import
-   ./macros
+   macros
 
 type
    CppStd* = enum

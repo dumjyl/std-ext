@@ -1,6 +1,6 @@
 import
    ../std_ext,
-   ./c_ffi/str,
+   c_ffi/str,
    system/io as sys_io
 
 type

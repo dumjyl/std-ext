@@ -253,6 +253,15 @@ proc gen_def_val*(name: NimNode, val: NimNode): NimNode =
 proc gen_def_typ*(name: NimNode, typ: NimNode): NimNode =
    result = nnk_ident_defs.init(name, typ, empty)
 
+proc gen_const_def*(name: NimNode, typ: NimNode, val: NimNode): NimNode =
+   result = nnk_const_def.init(name, typ, val)
+
+proc gen_const_def_val*(name: NimNode, val: NimNode): NimNode =
+   result = nnk_const_def.init(name, empty, val)
+
+proc gen_const_def_typ*(name: NimNode, typ: NimNode): NimNode =
+   result = nnk_const_def.init(name, typ, empty)
+
 proc gen_lit*[T](val: T): NimNode =
    ## An alias for `new_lit`
    result = new_lit(val)
@@ -291,6 +300,15 @@ proc gen_var_val*(name: NimNode, val: NimNode): NimNode =
 
 proc gen_var_typ*(name: NimNode, typ: NimNode): NimNode =
    result = nnk_var_section.init(gen_def_typ(name, typ))
+
+proc gen_const*(name: NimNode, typ: NimNode, val: NimNode): NimNode =
+   result = nnk_const_section.init(gen_const_def(name, typ, val))
+
+proc gen_const_val*(name: NimNode, val: NimNode): NimNode =
+   result = nnk_const_section.init(gen_const_def_val(name, val))
+
+proc gen_const_typ*(name: NimNode, typ: NimNode): NimNode =
+   result = nnk_const_section.init(gen_const_def_typ(name, typ))
 
 proc gen_asgn*(a: NimNode, b: NimNode): NimNode =
    result = nnk_asgn.init(a, b)

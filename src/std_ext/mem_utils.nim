@@ -1,8 +1,14 @@
 import
    ../std_ext,
-   ./str_utils,
-   ./checks,
-   core/allocators as std_allocators
+   str_utils,
+   checks
+
+when import_exists(system/allocators):
+   import system/allocators as std_allocators
+elif import_exists(core/allocators):
+   import core/allocators as std_allocators
+else:
+   {.error: "Cannot find allocators module.".}
 
 export
    std_allocators
@@ -129,7 +135,7 @@ proc init*[T](
       result.ref_count = 1
       result.len = len
       result.allocator = allocator
-   if zero_mem and ZerosMem notin allocator.flags:
+   if zero_mem and AllocatorFlag.ZerosMem notin allocator.flags:
       zero_mem(addr result.data[0], size_of(T) * len)
 
 proc deinit*[T](self: RcData[T]) =

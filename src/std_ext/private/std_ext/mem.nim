@@ -1,5 +1,5 @@
 import
-   ./types
+   types
 
 proc mem*[T](x: var seq[T], offset: isize = 0): ptr T {.inline.} =
    result = addr x[offset]
