@@ -1,4 +1,4 @@
-version = "1.0.0"
+version = "1.0.1"
 author = "Jasper Jenkins"
 description = "stdlib extensions for nim for me"
 license = "MIT"
@@ -26,7 +26,7 @@ proc release_flag(name: string): string =
    else:
       result = ""
 
-const disabled = [""]
+const disabled = ["cpp_class.nim"]
 
 task test, "run tests":
    let src_files = (collect_files_rec("src") & collect_files_rec("tests"))

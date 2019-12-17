@@ -50,6 +50,23 @@ type
    CStringArray* = object
       impl: c_string_array
 
+proc `=destroy`*(c_strs: var CStringArray) =
+   if c_strs.impl != nil:
+      c_strs.impl.free()
+
+proc `=`*(dst: var CStringArray, src: CStringArray) =
+   `=destroy`(dst)
+   if src.impl.len > 0:
+      dst.impl = cast[c_string_array](alloc0(size_of(c_string) *
+                                             (src.impl.len+1)))
+      for i, c_str in src.impl:
+         dst.impl[i] = cast[c_string](alloc0(size_of(c_str[0]) * (c_str.len+1)))
+         copy_mem(dst.impl[i], unsafe_addr c_str[0], c_str.len)
+
+proc `=sink`*(dst: var CStringArray, src: CStringArray) =
+   `=destroy`(dst)
+   dst.impl = src.impl
+
 proc inner*(c_strs: CStringArray): c_string_array =
    result = c_strs.impl
 
@@ -58,20 +75,3 @@ proc init*(
       strs: openarray[string]
       ): CStringArray =
    result = CStringArray(impl: c_string_array.alloc(strs))
-
-proc `=`*(dst: var CStringArray, src: CStringArray) =
-   `=destroy`(dst)
-   if src.impl.len > 0:
-      dst.impl = cast[c_string_array](alloc0(size_of(c_string) *
-                                             (src.impl.len+1)))
-      for i, c_str in src.inner:
-         dst.impl[i] = cast[c_string](alloc0(size_of(c_str[0]) * (c_str.len+1)))
-         copy_mem(dst.impl[i], unsafe_addr c_str[0], c_str.len)
-
-proc `=destroy`*(c_strs: var CStringArray) =
-   if c_strs.impl != nil:
-      c_strs.impl.free()
-
-proc `=sink`*(dst: var CStringArray, src: CStringArray) =
-   `=destroy`(dst)
-   dst.impl = src.impl
