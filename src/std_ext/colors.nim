@@ -7,7 +7,6 @@ gen:
    result = gen_stmts()
    for color in fg_black..fg_white:
       let color_str = color.`$`.substr(2).to_lower_ascii()
-      echo color_str
       let color = gen_lit(color)
       let name = id(color_str)
       let bright_name = id("bright_" & color_str)
