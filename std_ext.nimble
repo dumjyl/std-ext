@@ -1,10 +1,10 @@
-version = "1.1.0"
+version = "1.2.0"
 author = "Jasper Jenkins"
 description = "stdlib extensions for nim for me"
 license = "MIT"
 
 src_dir = "src"
-requires "nim >= 0.20.2"
+requires "nim >= 1.0.4"
 
 import
    os,

@@ -582,3 +582,6 @@ proc remove_pragma*(ast: NimNode, name: string, must_exist = false) =
       remove_pragma(ast.pragmas, name)
    else:
       unexp_err(ast)
+
+template add_ast*(stmts: NimNode, ast: untyped) =
+   stmts.add quote do: ast
