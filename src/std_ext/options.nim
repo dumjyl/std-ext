@@ -1,5 +1,6 @@
 import
-   ../std_ext
+   ../std_ext,
+   macros
 
 type
    OptError* = object of Defect
@@ -49,17 +50,26 @@ proc unsafe_maybe_uninit_take_val*[T](opt: sink Opt[T]): T =
    else:
       result = default(T)
 
-template `?=`*(maybe_val: untyped, name: untyped): bool =
-   let temp_maybe_val = maybe_val
-   let has_val = temp_maybe_val.is_val()
-   var name = unsafe_maybe_uninit_take_val(temp_maybe_val)
-   has_val
-
-template is_val*(maybe_val: untyped, name: untyped): bool =
-   let temp_maybe_val = maybe_val
-   let has_val = temp_maybe_val.is_val()
-   var name = unsafe_maybe_uninit_take_val(temp_maybe_val)
-   has_val
+macro `as`*(option_val: untyped, as_kind: untyped): untyped =
+   runnable_examples:
+      let opt = some(24)
+      if opt as some(val):
+         echo "has value: ", val
+      else:
+         echo "no value"
+   if `id==`(as_kind, "none"):
+      result = quote do:
+         is_none(`option_val`)
+   elif as_kind.kind in nnk_call_kinds and as_kind.len == 2 and
+         `id==`(as_kind[0], "some") and as_kind[1].kind == nnk_ident:
+      let name = as_kind[1]
+      result = quote do:
+         let tmp = `option_val`
+         let has_val = is_val(tmp)
+         var `name` = unsafe_maybe_uninit_take_val(tmp)
+         has_val
+   else:
+      error("unexpected `Opt` unpack expression: " & repr as_kind)
 
 proc unwrap*[T](opt: sink Opt[T], msg: varargs[string, `$`]): T =
    let opt_temp = opt
@@ -68,10 +78,10 @@ proc unwrap*[T](opt: sink Opt[T], msg: varargs[string, `$`]): T =
    opt_temp.val
 
 proc `$`*[T](opt: Opt[T]): string =
-   if opt ?= val:
+   if opt as some(val):
       result = "value(" & $val & ")"
    else:
       result = "none(" & $T & ")"
 
 proc or_val*[T](opt: Opt[T], fallback_val: T): T =
-   result = if opt ?= val: val else: fallback_val
+   result = if opt as some(val): val else: fallback_val

@@ -1,6 +1,6 @@
 import
-  ./std_ext,
-  ./std_ext/options
+   ./std_ext,
+   ./std_ext/options
 
 run:
    assert(size_of(Opt[i8]) == 2)
@@ -23,8 +23,9 @@ run:
    var b_has = some(y)
    assert(b_has.is_val())
 
-   if a_has ?= str:
+   if a_has as some(str):
       assert(str == "str")
+   assert(a_nil as none)
 
    var nil_path = false
-   assert((if a_nil ?= str: "str" else: "nil str") == "nil str")
+   assert((if a_nil as some(str): "str" else: "nil str") == "nil str")
