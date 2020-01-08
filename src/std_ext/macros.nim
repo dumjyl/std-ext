@@ -456,6 +456,7 @@ template bind_call*(ident: string, args: varargs[NimNode]): NimNode =
 
 template gen*(stmts: untyped): untyped =
    macro impl_gen: untyped {.gen_sym.} =
+      result = gen_stmts()
       stmts
    impl_gen()
 

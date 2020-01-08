@@ -91,3 +91,7 @@ macro block_of*(op, stmts: untyped): untyped =
    for i in 0 ..< stmts.len:
       stmts[i] = nnk_call.init(op, stmts[i])
    result = stmts
+
+template static_block*(ast: untyped): untyped =
+   proc static_block_fn: auto {.nim_call.} = ast
+   system.static(static_block_fn())

@@ -32,11 +32,17 @@ proc surround*(str: string, lhs, rhs: string, join = ", "): string =
    result = [str].surround(lhs, rhs, join)
 
 proc ln*[T](self: var string, val: T) =
-  self &= $val & '\n'
+   ## Add a `$val` followed by a newline.
+   self &= $val & '\n'
 
 proc ln*(self: var string) =
-  self &= '\n'
+   ## Add a newline.
+   self &= '\n'
 
 proc lns*[T](self: var string, vals: openarray[T]) =
-  for val in vals:
-    self.ln(val)
+   for val in vals:
+      self.ln(val)
+
+proc quoted*(val: char|string): string =
+   ## Get a quoted version of val.
+   result.add_quoted(val)

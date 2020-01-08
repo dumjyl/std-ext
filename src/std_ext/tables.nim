@@ -23,4 +23,4 @@ proc init*[K](
       Self: type[CountTable[K]],
       cap = default_initial_size
       ): CountTable[K] {.inline.} =
-   result = new_CountTable(cap)
+   result = init_CountTable[K](cap)

@@ -1,5 +1,7 @@
 import
-   ../std_ext,
+   private/std_ext/[types,
+                    fixup_varargs,
+                    errors],
    macros
 
 type
@@ -28,6 +30,9 @@ proc is_val*[T](opt: Opt[T]): bool =
       result = opt.val != nil
    else:
       result = opt.has_val
+
+proc is_some*[T](opt: Opt[T]): bool =
+   result = opt.is_val()
 
 proc is_none*[T](opt: Opt[T]): bool =
    result = not opt.is_val()
@@ -61,7 +66,8 @@ macro `as`*(option_val: untyped, as_kind: untyped): untyped =
       result = quote do:
          is_none(`option_val`)
    elif as_kind.kind in nnk_call_kinds and as_kind.len == 2 and
-         `id==`(as_kind[0], "some") and as_kind[1].kind == nnk_ident:
+         (`id==`(as_kind[0], "some") or `id==`(as_kind[0], "val")) and
+         as_kind[1].kind == nnk_ident:
       let name = as_kind[1]
       result = quote do:
          let tmp = `option_val`
@@ -71,12 +77,6 @@ macro `as`*(option_val: untyped, as_kind: untyped): untyped =
    else:
       error("unexpected `Opt` unpack expression: " & repr as_kind)
 
-proc unwrap*[T](opt: sink Opt[T], msg: varargs[string, `$`]): T =
-   let opt_temp = opt
-   if unlikely(opt_temp.is_none()):
-      {.line.}: failure(@msg)
-   opt_temp.val
-
 proc `$`*[T](opt: Opt[T]): string =
    if opt as some(val):
       result = "value(" & $val & ")"
@@ -85,3 +85,9 @@ proc `$`*[T](opt: Opt[T]): string =
 
 proc or_val*[T](opt: Opt[T], fallback_val: T): T =
    result = if opt as some(val): val else: fallback_val
+
+proc unwrap*[T](opt: sink Opt[T], msg: varargs[string, `$`]): T =
+   let opt_temp = opt
+   if unlikely(opt_temp.is_none()):
+      {.line.}: fixup_varargs fatal(msg)
+   opt_temp.val

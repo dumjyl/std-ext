@@ -1,4 +1,4 @@
-version = "1.3.0"
+version = "1.4.0"
 author = "Jasper Jenkins"
 description = "stdlib extensions for nim for me"
 license = "MIT"
@@ -26,7 +26,7 @@ proc release_flag(name: string): string =
    else:
       result = ""
 
-const disabled = ["cpp_class.nim"]
+const disabled = ["cpp_class.nim", "tfailure.nim"]
 
 task test, "run tests":
    let src_files = (collect_files_rec("src") & collect_files_rec("tests"))
@@ -34,7 +34,7 @@ task test, "run tests":
    for src_file in src_files:
       if src_file.extract_filename notin disabled:
          try:
-            exec "nim cpp -r -d:testing --threads:on " &
+            exec "nim cpp -r --path:src --clear_nimble_path -d:testing --threads:on " &
                release_flag(src_file) & src_file
          except:
             echo "failed processing: ", src_file
