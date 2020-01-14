@@ -1,10 +1,8 @@
-version = "1.4.0"
+version = "1.5.0"
 author = "Jasper Jenkins"
 description = "stdlib extensions for nim for me"
 license = "MIT"
-
 src_dir = "src"
-requires "nim >= 1.0.4"
 
 import
    os,
@@ -26,12 +24,13 @@ proc release_flag(name: string): string =
    else:
       result = ""
 
-const disabled = ["cpp_class.nim", "tfailure.nim"]
+const disabled = ["cpp_class.nim"]
 
 task test, "run tests":
-   let src_files = (collect_files_rec("src") & collect_files_rec("tests"))
-                    .filter_it(it.ends_with(".nim"))
-   for src_file in src_files:
+   #exec "porcupine --dir:tests"
+   var src_files = collect_files_rec("src")
+   src_files &= collect_files_rec("tests")
+   for src_file in src_files.filter_it(it.ends_with(".nim")):
       if src_file.extract_filename notin disabled:
          try:
             exec "nim cpp -r --path:src --clear_nimble_path -d:testing --threads:on " &

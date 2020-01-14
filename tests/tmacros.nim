@@ -1,3 +1,7 @@
+#[
+backends: js, c, c++, script
+]#
+
 import
    pkg/std_ext/macros,
    pkg/std_ext/dev_utils

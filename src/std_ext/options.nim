@@ -55,6 +55,14 @@ proc unsafe_maybe_uninit_take_val*[T](opt: sink Opt[T]): T =
    else:
       result = default(T)
 
+proc infer_name(cur: NimNode, total: NimNode): NimNode =
+   case cur.kind:
+   of nnk_ident: result = cur
+   of nnk_sym: result = id(cur.str_val)
+   of nnk_dot_expr: result = infer_name(cur[^1], total)
+   else: error("cannot infer name for `Opt` unpacking from expression: `" &
+               repr(total) & "`")
+
 macro `as`*(option_val: untyped, as_kind: untyped): untyped =
    runnable_examples:
       let opt = some(24)
@@ -68,7 +76,9 @@ macro `as`*(option_val: untyped, as_kind: untyped): untyped =
    elif as_kind.kind in nnk_call_kinds and as_kind.len == 2 and
          (`id==`(as_kind[0], "some") or `id==`(as_kind[0], "val")) and
          as_kind[1].kind == nnk_ident:
-      let name = as_kind[1]
+      var name = as_kind[1]
+      if `id==`(name, "_"):
+         name = infer_name(option_val, option_val)
       result = quote do:
          let tmp = `option_val`
          let has_val = is_val(tmp)

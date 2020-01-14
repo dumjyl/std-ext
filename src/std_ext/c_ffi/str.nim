@@ -66,7 +66,7 @@ proc `$`*(str: cpp_string): string {.inline.} =
 proc mem*(self: var cpp_string): ptr char =
   result = self[0].addr
 
-run(test):
+anon_when(test):
    var x = cpp_string.init()
    x.add('a')
    x.add('b')

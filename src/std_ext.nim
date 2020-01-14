@@ -9,7 +9,7 @@ import
                             str,
                             fixup_varargs]
 
-when not defined(nim_script):
+when not (defined(nim_script) or defined(js)):
    import std_ext/private/std_ext/c_strs
    export c_strs
 
@@ -100,10 +100,16 @@ proc add_tup*[T0, T1](self: var seq[(T0, T1)], a: T0, b: T1) =
    self.add((a, b))
 
 template import_exists*(module: untyped): bool =
+   ## Check if `module` can be imported.
    compiles:
       import module
 
-sec(test):
+template any*[T: enum](_: typedesc[T]): set[T] =
+   ## Get a set of all values in `T`. Named `any` instead of `all` due because
+   ## it is for use in a case statement.
+   {low(T) .. high(T)}
+
+section(test):
    type
       Obj = object
          str: string
@@ -113,7 +119,7 @@ sec(test):
          str: string
          i32: int32
 
-run(test):
+anon_when(test):
    block_of assert:
       $Obj(str: "obj str", i32: 3) == "(str: \"obj str\", i32: 3)"
       $RefObj(str: "ref obj str", i32: 7) == "(str: \"ref obj str\", i32: 7)"

@@ -1,8 +1,6 @@
 import
    ../std_ext,
    macros
-from c_ffi import emit
-
 
 proc impl_is_literal(n: NimNode): bool =
    case n.kind:
@@ -20,7 +18,6 @@ template assert_eq_str(expr, val): string =
    else:
       "(" & ast_to_str(expr) & ": " & $val & ")"
 
-
 template assert_eq*(a, b) =
    ## An equality assertion with a nicer message on failure.
    let a_val = a
@@ -30,6 +27,9 @@ template assert_eq*(a, b) =
            assert_eq_str(b, b_val))
       quit(QuitFailure)
 
-proc black_box*[T](value: T) {.inline.} =
-   ## Prevent compiler from optimizing away expression.
-   emit("""asm volatile("" : : "r,m"(""", value, """) : "memory");""")
+when defined(c) or defined(cpp):
+   from c_ffi import emit
+
+   proc black_box*[T](value: T) {.inline.} =
+      ## Prevent compiler from optimizing away expression.
+      emit("""asm volatile("" : : "r,m"(""", value, """) : "memory");""")

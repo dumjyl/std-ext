@@ -1,6 +1,7 @@
 import
-   std/os,
-   macros
+   macros,
+   std_ext/private/std_ext/when_vm,
+   std/os
 
 # Respects https://bixense.com/clicolors/ and https://no-color.org/
 
@@ -20,11 +21,13 @@ proc is_clicolor_force_env: bool =
    result = get_env("CLICOLOR_FORCE", "0") != "0"
 
 proc is_clicolor: bool =
-   when nim_vm:
+   template no_stdout =
       result = is_clicolor_env() or is_clicolor_force_env()
+   when nim_vm:
+      no_stdout
    else:
-      when defined(nim_script):
-         result = is_clicolor_env() or is_clicolor_force_env()
+      when defined(nim_script) or defined(js):
+         no_stdout
       else:
          result = (is_clicolor_env() and is_a_tty(stdout)) or
                    is_clicolor_force_env()

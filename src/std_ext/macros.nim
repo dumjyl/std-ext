@@ -1,6 +1,7 @@
 import
    std/strformat,
-   std/strutils, std/macros as sys_macros,
+   std/strutils,
+   std/macros as sys_macros,
    std/macrocache
 export
    sys_macros except `$`, emit, copy_nim_tree, expect_kind, expect_len,

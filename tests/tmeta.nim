@@ -4,7 +4,7 @@ import
 template reject(stmts: untyped) =
    assert(not compiles(stmts))
 
-run:
+anon:
    block:
       var sum = 0
       unroll(i, [1, 3, 9]):

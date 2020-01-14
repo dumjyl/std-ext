@@ -130,7 +130,7 @@ proc hash_buffer(x: openarray[u8],
    a = a.bit_xor(x.len.usize)
    result = diffuse(a)
 
-sec(test):
+section(test):
    proc read_int_ref(x: openarray[u8]): u64 =
       for i in countdown(x.high, 0):
          result = result shl 8
@@ -237,7 +237,7 @@ proc hash_ex*(x: pointer): HashEx =
 
 {.pop.}
 
-sec(test):
+section(test):
    proc b(s: string): seq[u8] =
       for i in span(s):
          result.add(s[i].u8)
@@ -330,7 +330,7 @@ sec(test):
          hash_buffer(b"iiiiiiiijkjke") != hash_buffer(b"iiiiiiiijkjk")
          hash_buffer(b"ab") != hash_buffer(b"bb")
 
-run(test):
+anon_when(test):
    read_int_test()
    read_u64_test()
    diffuse_test(94203824938'u64, 17289265692384716055'u64)

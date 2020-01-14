@@ -2,13 +2,20 @@ import
    ./std_ext,
    ./std_ext/options
 
-run:
+type
+   Foo = object
+      field_val: Opt[string]
+
+proc get_foo(): Foo =
+   result = Foo(field_val: some("abc"))
+
+anon:
    assert(size_of(Opt[i8]) == 2)
    assert(size_of(Opt[ref i8]) == 8)
    type
       MaybeFloat = Opt[ref f32]
    var x: ref f32
-   sec(debug):
+   section(debug):
       do_assert_raises OptError: discard some(x)
    var y = new(f32)
 
@@ -29,3 +36,10 @@ run:
 
    var nil_path = false
    assert((if a_nil as some(str): "str" else: "nil str") == "nil str")
+
+   let x2 = some(123)
+   if x2 as some(_):
+      static_assert(type_of(x2) is int)
+
+   if get_foo().field_val as some(_):
+      static_assert(type_of(field_val) is string)

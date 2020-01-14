@@ -1,3 +1,7 @@
+#[
+backends: c++, c, vm, script
+]#
+
 import std_ext/colors
 
 template ln(color) =

@@ -20,7 +20,6 @@ proc init*[T](
       ): Obj[T] =
    result = Obj[T](str: str, i32: i32, val: val)
 
-
 proc init*[T](Self: type[RefObj[T]], val: T): RefObj[T] =
    result = RefObj[T](val: val)
 
@@ -37,7 +36,7 @@ proc init*(Self: type[ptr int8], val: int8): Self =
    result = create(int8)
    result[] = val * 2
 
-run:
+anon:
    block_of assert:
       Obj.init("abc", 123'i32, @[1, 2, 3]) == Obj[seq[int]](str: "abc",
                                                             i32: 123.i32,

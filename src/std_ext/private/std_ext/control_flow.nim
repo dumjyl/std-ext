@@ -19,13 +19,6 @@ template loop*(stmts: untyped): untyped =
    while true:
       stmts
 
-template run*(stmts: untyped) =
-   ## Some of nim's analysis only works within proc. This creates a proc with
-   ## the contents of `stmts` and runs it.
-   proc run_fn {.gen_sym.} =
-      stmts
-   run_fn()
-
 template `ast_str~=`(ast_a, ast_b: untyped): bool =
    cmp_ignore_style(ast_to_str(ast_a), ast_to_str(ast_b)) == 0
 
@@ -39,7 +32,7 @@ template mode_condition(condition: untyped): bool =
    else:
       defined(condition)
 
-template sec*(condition: untyped, stmts: untyped) =
+template section*(condition: untyped, stmts: untyped) =
    ## A section of code defined only upon `condition`.
    ##
    ## This condition may be:
@@ -50,10 +43,24 @@ template sec*(condition: untyped, stmts: untyped) =
    when mode_condition(condition):
       stmts
 
-template run*(condition, stmts: untyped) =
-   ## A version of `run` that takes a condition like `sec`.
+template main*(stmts: untyped) =
+   ## Like `anon` but only for when `is_main_module`
+   when is_main_module:
+      proc main_fn {.gen_sym.} =
+         stmts
+      main_fn()
+
+template anon*(stmts: untyped): untyped =
+   proc anon_fn: auto {.nim_call.} = stmts
+   anon_fn()
+
+template anon_when*(condition: untyped, stmts: untyped): untyped =
    when mode_condition(condition):
-      run(stmts)
+      anon(stmts)
+
+template static_anon*(stmts: untyped): untyped =
+   proc static_anon_fn: auto {.nim_call.} = stmts
+   system.static(static_anon_fn())
 
 proc impl_unroll[T](n: NimNode, x_sym: NimNode, x: T): NimNode =
    result = n
@@ -91,7 +98,3 @@ macro block_of*(op, stmts: untyped): untyped =
    for i in 0 ..< stmts.len:
       stmts[i] = nnk_call.init(op, stmts[i])
    result = stmts
-
-template static_block*(ast: untyped): untyped =
-   proc static_block_fn: auto {.nim_call.} = ast
-   system.static(static_block_fn())

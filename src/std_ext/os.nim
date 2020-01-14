@@ -1,13 +1,16 @@
+# eventually this should transform into a module that works seemlessly
+# between nim, nimvm, and nimcript.
+
 import
    options,
-   std/os as sys_os,
-   private/os/os_proc
+   std/os as sys_os
 
-export
-   sys_os except get_env, find_exe
+# XXX: nimvm and nim-script support for strtabs
+when not defined(nim_script):
+   import private/os/os_proc
+   export os_proc
 
-export
-   os_proc
+export sys_os except get_env, find_exe
 
 proc cur_dir*: string =
    ## Return the current working directory.

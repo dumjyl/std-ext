@@ -1,3 +1,7 @@
+#[
+backends: js, c, c++, script
+]#
+
 import
    std_ext/sets
 

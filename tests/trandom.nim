@@ -3,7 +3,7 @@ import
    ./std_ext/random,
    std/sequtils
 
-run:
+anon:
    var rd = RandomDevice.init()
    discard rd.entropy
    var x = MT19937_64.init(rd.sample())
