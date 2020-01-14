@@ -1,8 +1,6 @@
 import ../../macros
 
 macro when_vm*(branches: varargs[untyped]): untyped =
-   if branches.len notin 1 .. 2:
-      error("incorrect branch count for `when_vm`")
    var (vm, other) = (
       case branches.len:
       of 1: (branches[0], gen_stmts())

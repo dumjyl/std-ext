@@ -51,7 +51,7 @@ template main*(stmts: untyped) =
       main_fn()
 
 template anon*(stmts: untyped): untyped =
-   proc anon_fn: auto {.nim_call.} = stmts
+   proc anon_fn: auto {.gen_sym, nim_call.} = stmts
    anon_fn()
 
 template anon_when*(condition: untyped, stmts: untyped): untyped =
@@ -59,7 +59,7 @@ template anon_when*(condition: untyped, stmts: untyped): untyped =
       anon(stmts)
 
 template static_anon*(stmts: untyped): untyped =
-   proc static_anon_fn: auto {.nim_call.} = stmts
+   proc static_anon_fn: auto {.gen_sym, nim_call.} = stmts
    system.static(static_anon_fn())
 
 proc impl_unroll[T](n: NimNode, x_sym: NimNode, x: T): NimNode =
