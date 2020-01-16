@@ -3,6 +3,8 @@ import
    macros,
    os
 
+export usize
+
 type
    CError* = object of CatchableError
 

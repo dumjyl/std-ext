@@ -1,4 +1,4 @@
-version = "1.5.1"
+version = "1.5.2"
 author = "Jasper Jenkins"
 description = "stdlib extensions for nim for me"
 license = "MIT"
