@@ -1,4 +1,4 @@
-version = "1.5.2"
+version = "1.6.0"
 author = "Jasper Jenkins"
 description = "stdlib extensions for nim for me"
 license = "MIT"
@@ -24,7 +24,7 @@ proc release_flag(name: string): string =
    else:
       result = ""
 
-const disabled = ["cpp_class.nim"]
+const disabled = ["cpp_class.nim", "tmain.nim"]
 
 task test, "run tests":
    #exec "porcupine --dir:tests"

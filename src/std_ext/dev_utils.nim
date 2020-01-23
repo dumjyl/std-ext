@@ -27,6 +27,11 @@ template assert_eq*(a, b) =
            assert_eq_str(b, b_val))
       quit(QuitFailure)
 
+macro asserts*(stmts: untyped): untyped =
+   result = gen_stmts()
+   for stmt in stmts:
+      result.add(gen_call("do_assert", stmt))
+
 when defined(c) or defined(cpp):
    from c_ffi import emit
 

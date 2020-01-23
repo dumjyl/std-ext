@@ -238,6 +238,7 @@ proc hash_ex*(x: pointer): HashEx =
 {.pop.}
 
 section(test):
+   import dev_utils
    proc b(s: string): seq[u8] =
       for i in span(s):
          result.add(s[i].u8)
@@ -246,7 +247,7 @@ section(test):
       var a = [2'u8, 3]
       var b = [3'u8, 2]
       var c = [3'u8, 2, 5]
-      block_of assert:
+      asserts:
          read_int(a.mem(), 2) == 770
          read_int(b.mem(), 2) == 515
          read_int(c.mem(), 3) == 328195
@@ -258,7 +259,7 @@ section(test):
       assert(read_u64(b.mem()) == 258)
 
    proc diffuse_test(x: u64, y: u64) =
-      block_of assert:
+      asserts:
          diffuse(x) == y
          x == undiffuse(y)
          undiffuse(diffuse(x)) == x
@@ -309,7 +310,7 @@ section(test):
          rhs2 = [1'u8, 2, 3, 4, 0]
          rhs3 = [0'u8, 1, 2, 3, 4]
          rhs4 = [0'u8, 0, 0, 0, 0]
-      block_of assert:
+      asserts:
          hash_buffer(lhs0) != hash_buffer(rhs0)
          hash_buffer(lhs0) != hash_buffer(rhs1)
          hash_buffer(lhs0) != hash_buffer(rhs2)
@@ -317,7 +318,7 @@ section(test):
          hash_buffer(lhs1) != hash_buffer(rhs4)
 
    proc not_equal() =
-      block_of assert:
+      asserts:
          hash_buffer(b"to be or not to be ") != hash_buffer(b"to be or not to be")
          hash_buffer(b"jkjke") != hash_buffer(b"jkjk")
          hash_buffer(b"ijkjke") != hash_buffer(b"ijkjk")

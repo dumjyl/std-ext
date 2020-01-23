@@ -1,12 +1,13 @@
 import
-   ./std_ext
+   std_ext/dev_utils,
+   std_ext
 
 type
    HoledEnum = enum k0 = -3, k1 = -2, k2 = 1, k3 = 3, k4 = 10
    NotHoledEnum = enum A, B, C, D
 
 anon:
-   block_of assert:
+   asserts:
       int.tupled(3) is (int, int, int)
       deref(ptr int) is int
       deref(ref seq[float]) is seq[float]

@@ -3,7 +3,7 @@ import
    std_ext/private/std_ext/[iterators,
                             types,
                             mem,
-                            errors,
+                            exit_utils,
                             control_flow,
                             vec_like,
                             str,
@@ -17,7 +17,7 @@ export
    iterators,
    types,
    mem,
-   errors,
+   exit_utils,
    control_flow,
    vec_like,
    str,
@@ -40,30 +40,6 @@ proc `$`*(x: ref|ptr): string =
    else:
       result = $x[]
 
-proc init*[T](Self: type[ref T], val: T): ref T =
-   # Creates a `ref Obj` from and `Obj`
-   # XXX: (ref Generic).init(Generic[int](val: 1)) loses the generic arg.
-   new(result)
-   result[] = val
-
-template init*[T](Self: type[ref T], args: varargs[untyped]): auto =
-   # Creates a `ref Obj` from `Obj.init(args)`
-   var res = new(ref type_of(init(type(T), args)))
-   res[] = init(type(T), args)
-   res
-
-when not defined(nim_script):
-   proc init*[T](Self: type[ptr T], val: T): ptr T =
-      # Creates a `ptr Obj` from and `Obj`
-      result = create(T)
-      result[] = val
-
-   template init*[T](Self: type[ptr T], args: varargs[untyped]): auto =
-      # Creates a `ptr Obj` from `Obj.init(args)`
-      var res = create(type_of(init(type(T), args)))
-      res[] = init(type(T), args)
-      res
-
 template deref*[T](x: ptr T): var T =
    ## Dereference `x`.
    x[]
@@ -71,6 +47,42 @@ template deref*[T](x: ptr T): var T =
 template deref*[T](x: ref T): var T =
    ## Dereference `x`.
    x[]
+
+template `deref=`*[T](x: ptr T, y: T) =
+   x[] = y
+
+template `deref=`*[T](x: ref T, y: T) =
+   x[] = y
+
+proc init*[T](Self: type[ref T], val: T): ref T =
+   # Creates a `ref Obj` from and `Obj`
+   # XXX: (ref Generic).init(Generic[int](val: 1)) loses the generic arg.
+   new(result)
+   result.deref = val
+
+template init*[T](Self: type[ref T], args: varargs[untyped]): auto =
+   # Creates a `ref Obj` from `Obj.init(args)`
+   var result = new(ref type_of(init(type_of(T), args)))
+   result.deref = init(type_of(T), args)
+   result
+
+template init*[T: Exception](Self: typedesc[T], message: string): ref T =
+   (ref Self)(msg: message)
+
+template throw*[T: Exception](Self: typedesc[T], message: string) =
+   raise (ref Self)(msg: message)
+
+when not defined(nim_script):
+   proc init*[T](Self: type[ptr T], val: T): ptr T =
+      # Creates a `ptr Obj` from and `Obj`
+      result = create(T)
+      result.deref = val
+
+   template init*[T](Self: type[ptr T], args: varargs[untyped]): auto =
+      # Creates a `ptr Obj` from `Obj.init(args)`
+      var res = create(type_of(init(type_of(T), args)))
+      res.deref = init(type_of(T), args)
+      res
 
 proc bit_cast*[From, To](x: From, PTo: type[To]): To {.inline.} =
    ## An alias for cast that takes a type.
@@ -120,10 +132,9 @@ section(test):
          i32: int32
 
 anon_when(test):
-   block_of assert:
-      $Obj(str: "obj str", i32: 3) == "(str: \"obj str\", i32: 3)"
-      $RefObj(str: "ref obj str", i32: 7) == "(str: \"ref obj str\", i32: 7)"
-      $AnonRefObj(str: "anon ref obj str", i32: 53) ==
-         "(str: \"anon ref obj str\", i32: 53)"
-      $default(ptr int) == "nil"
-      $default(AnonRefObj) == "nil"
+   assert $Obj(str: "obj str", i32: 3) == "(str: \"obj str\", i32: 3)"
+   assert $RefObj(str: "ref obj str", i32: 7) == "(str: \"ref obj str\", i32: 7)"
+   assert $AnonRefObj(str: "anon ref obj str", i32: 53) ==
+      "(str: \"anon ref obj str\", i32: 53)"
+   assert $default(ptr int) == "nil"
+   assert $default(AnonRefObj) == "nil"

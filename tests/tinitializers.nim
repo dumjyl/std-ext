@@ -37,7 +37,7 @@ proc init*(Self: type[ptr int8], val: int8): Self =
    result[] = val * 2
 
 anon:
-   block_of assert:
+   asserts:
       Obj.init("abc", 123'i32, @[1, 2, 3]) == Obj[seq[int]](str: "abc",
                                                             i32: 123.i32,
                                                             val: @[1, 2, 3])

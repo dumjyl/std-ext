@@ -1,7 +1,7 @@
 import
    private/std_ext/[types,
                     fixup_varargs,
-                    errors],
+                    exit_utils],
    macros
 
 type
