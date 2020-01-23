@@ -18,7 +18,7 @@ proc some*[T](val: sink T): Opt[T] =
    when T is Nilable:
       when not defined(release):
          if unlikely(result.val == nil):
-            OptError.throw($Opt[T] & " initialized with nil value")
+            raise newException(OptError, $Opt[T] & " initialized with nil value")
    else:
       result.has_val = true
 
