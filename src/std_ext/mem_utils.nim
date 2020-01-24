@@ -12,9 +12,6 @@ elif import_exists(core/allocators):
 else:
    const has_allocators = false
 
-export
-   std_allocators
-
 proc offset_u8*(x: pointer, i: isize): pointer {.inline.} =
    ## Return a `pointer` offset by ``i`` bytes.
    result = (x.bit_cast(isize) + i).bit_cast(pointer)
@@ -46,6 +43,8 @@ proc offset*[T](
    result = x.offset_u8(i * size_of(T))
 
 when has_allocators:
+   export std_allocators
+
    proc alloc*(
          allocator: Allocator,
          bytes: isize,
