@@ -38,7 +38,7 @@ proc write_trace(exit_request: ref ExitRequest) =
       when_vm:
          output.add(bright_yellow("Traceback:"))
       else:
-         output.add(bright_yellow("Traceback:", stderr))
+         output.add(stderr.bright_yellow("Traceback:"))
       if entries.len == 1:
          output.add(' ')
          output.add(render_entry(entries[0]))
@@ -61,11 +61,18 @@ template exit_handler*(stmts: untyped) =
       write_trace(exit_request)
       quit(exit_request.msg, exit_request.exit_code)
 
-template exit_handler*(cleanup: untyped, stmts: untyped) =
+template exit_handler*(on_exit: untyped, stmts: untyped) =
+   when_vm:
+      discard
+   else:
+      set_control_c_hook(proc {.no_conv.} =
+         stderr.write(stderr.bright_yellow("Signal Interrupt:"), " ctrl-c")
+         on_exit
+         quit(1))
    try:
       stmts
    except ExitRequest as exit_request:
-      cleanup()
+      on_exit
       write_trace(exit_request)
       quit(exit_request.msg, exit_request.exit_code)
 
@@ -75,16 +82,17 @@ template main*(stmts: untyped) =
          exit_handler(stmts)
       {.line.}: quit(main_fn())
 
-template main*(cleanup: untyped, stmts: untyped) =
+template main*(on_exit: untyped, stmts: untyped) =
    when is_main_module:
       proc main_fn: int {.gen_sym.} =
-         exit_handler(cleanup, stmts)
+         exit_handler(on_exit, stmts)
+         on_exit
       {.line.}: quit(main_fn())
 
 template fatal*(msgs: varargs[string, `$`]) =
    var message: string
-   when_vm: message = bright_red"Fatal:"
-   else: message = bright_red("Fatal:", stderr)
+   when_vm: message = bright_red("Fatal:")
+   else: message = stderr.bright_red("Fatal:")
    message.add(' ')
    for msg in msgs:
       message.add(msg)

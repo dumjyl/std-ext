@@ -73,11 +73,11 @@ gen:
             str.apply_code(`code` + 60)
          proc `bg_bright_name`*(str: string): string =
             str.apply_code(`code` + 10 + 60)
-         proc `name`*(str: string, f: File): string =
+         proc `name`*(f: File, str: string): string =
             str.apply_code(`code`, is_color_enabled(f))
-         proc `bg_name`*(str: string, f: File): string =
+         proc `bg_name`*(f: File, str: string): string =
             str.apply_code(`code` + 10, is_color_enabled(f))
-         proc `bright_name`*(str: string, f: File): string =
+         proc `bright_name`*(f: File, str: string): string =
             str.apply_code(`code` + 60, is_color_enabled(f))
-         proc `bg_bright_name`*(str: string, f: File): string =
+         proc `bg_bright_name`*(f: File, str: string): string =
             str.apply_code(`code` + 10 + 60, is_color_enabled(f))
